@@ -1,0 +1,65 @@
+Learning and Evaluating Contextual Embedding of Source Code 
+https://proceedings.mlr.press/v119/kanade20a/kanade20a.pdf
+
+In the space of programming languages, embeddings have
+been learned for specific software-engineering tasks (Chen
+& Monperrus, 2019). These include embeddings of variable
+and method identifiers using local and global context (Allamanis et al., 2015), abstract syntax trees (ASTs) (Mou
+et al., 2016; Zhang et al., 2019), AST paths (Alon et al.,
+2019), memory heap graphs (Li et al., 2016), and ASTs
+enriched with data-flow information (Allamanis et al., 2018;
+Hellendoorn et al., 2020). These approaches require analyzing source code beyond simple tokenization. In this
+work, we derive a pre-trained contextual embedding of tokenized source code without explicitly modeling source-codespecific information, and show that the resulting embedding
+can be effectively fine-tuned for downstream tasks
+
+
+Build Embeddings literature review 
+/home/hareem/UofA2023/TO-READ/Semantic_Source_Code_Models_Using_Identifier_Embeddings.pdf
+Software maintenance activities are switching from symbolic formal methods to data-driven methods.
+
+
+
+
+Kernel Methods for Structured Data 
+/home/hareem/UofA2023/Thesis_Writing/example_thesis/thesis-on-tree-kernels.pdf
+
+
+information retrieval
+similarity measures (and TK as a similarity measure)
+embeddings (TKs can be converted into embeddings but I don't think its straightforward)
+
+
+Bug Identification Methods in Current Research
+1. Static Analysis
+Code Patterns & Anti-pattern Detection
+
+Identifying potential issues based on predefined rules.
+
+Tools: SonarQube, FindBugs, Infer, etc.
+
+Code Smells & Technical Debt Analysis
+
+Detecting constructs correlated with bugs.
+
+Often combined with ML methods for accuracy improvement.
+
+2. Machine Learning & Deep Learning Approaches
+Bug Prediction via Classification Models
+
+Predicting buggy components using historical data.
+
+Algorithms: Decision Trees, Random Forests, XGBoost.
+
+Deep Learning Models
+
+CNNs, RNNs, Transformers for learning code representations.
+
+Models: CodeBERT, Graph Neural Networks (GNNs), GGNN, DeepBugs.
+
+Tree and Graph-based Representations
+
+Tree kernels and graph embeddings to capture code structure and semantics.
+
+Helpful for detecting semantic or structural bugs, e.g., AST (Abstract Syntax Tree) representations.
+
+Dynamic analysis and GPT related approaches are not relevant to this thesis.

@@ -1,0 +1,34 @@
+Umbrella -> empirical software engineering
+Other Themes
+
+Information Retrieval
+Clone Detection
+Software Defect Prediction
+Source Code Representations.
+Time 
+Source code similarity
+
+JIT and time are also related 
+
+explainability (tree kernels + IRJIT are both explainable)
+
+
+Find Big idea?
+• Addressing the limitations of current JIT-SDP methods:
+While the three papers address different aspects of software engineering, potential connections exist around the evaluation of software engineering techniques, the utilization of source code information, and the development of more practical and insightful software analytics methods.
+===========================================================================================================================
+==> Conclusion Stability 2020
+
+===========================================================================================================================
+==> IRJIT 2024
+RQ1. Is the CPU run time of IRJIT less than (or equal to) that of a state-of-the-art machine learning approach?
+
+RQ2. Does the predictive performance of IRJIT exceed (or remain equal to) the performance of a state-of-the-art machine learning approach?
+
+
+RQ3. For fine grained line level SDP, does IRJIT performance exceed (or remain equal to) that of a state-of-the-art machine learning approach?
+
+– a JIT-SDP approach based on IR to detect buggy commits at commit check-in time;
+– an approach to identify associated buggy lines for each identified buggy commit;
+– a realistic evaluation of our approach on 10 open-source software defect prediction datasets using various metrics and its comparison with a mature machine learning baseline
+

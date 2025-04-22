@@ -12,6 +12,7 @@
 \providecommand{\main}{.}
 \documentclass[12pt]{report}          % for default format
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%
 % Package dependencies  %
 %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -28,17 +29,60 @@
 \usepackage{tabulary} % Better text wrapping in tables. See https://en.wikibooks.org/wiki/LaTeX/Tables
 \usepackage{rotating} % For the 'sidewaystable' environment. See https://en.wikibooks.org/wiki/LaTeX/Rotations
 \usepackage{multirow} % For multirow/multicolumn cells in a table. See https://en.wikibooks.org/wiki/LaTeX/Tables#Columns_spanning_multiple_rows
-\usepackage{graphicx}
 %\usepackage{subcaption} % A package that can be used to create sub-figures
 \usepackage{enumitem} % for more control over enumerate
 \usepackage{mdwlist}	% the 'note' environment
-\usepackage{xspace}
 \usepackage{xcolor}
 \usepackage{csquotes} % Also used with biblatex
 \usepackage{xmpincl} % Seems to be needed when converting to PDF/A, 
                      % particularly on Macs
+%
+%
+% \usepackage{mathptmx}      % use Times fonts if available on your TeX system
+%
+% insert here the call for the packages your document requires
+%\usepackage{latexsym}
+% etc.
+%
+% please place your own definitions here and don't use \def but
+% \newcommand{}{}
+%
+% Insert the name of "your journal" with
+% \journalname{myjournal}
+%
 
-%%%%%%%%%%%%%%%
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{pifont}
+\usepackage[export]{adjustbox}
+%\usepackage{natbib} %Package biblatex Error: Incompatible package 'natbib'.
+%\usepackage{subcaption} % For subfigures  % this conflicts with subfig package
+\usepackage[caption=false]{subfig} %for subfloat
+
+
+\usepackage{booktabs}
+\usepackage{tikz}
+\usepackage{soul}
+\usepackage{xspace}
+\usepackage{tikzsymbols}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+% references
+% Colors
+\definecolor{darkred}{rgb}{0.75,0,0}
+
+% Round rectangle
+\newcommand{\roundbox}[1]{
+	\begin{center}
+		\begin{tikzpicture}
+			\node[draw=black, rectangle, rounded corners](box){
+				\begin{minipage}{0.9\columnwidth}
+					#1
+				\end{minipage}
+			};
+		\end{tikzpicture}
+	\end{center}
+}
 % biblatex    %
 %%%%%%%%%%%%%%%
 % (Added by Bernard Llanos)
@@ -48,7 +92,7 @@
 backend=biber,%
 style=ieee,%
 backref=false,%
-sortcites=true,sorting=nyt,%
+sortcites=true,%
 mincitenames=1,maxcitenames=2%
 ]{biblatex}
 % `backref=true` adds back references - Links to the in-text citations from
@@ -116,11 +160,10 @@ mincitenames=1,maxcitenames=2%
 \renewcommand{\contentsname}{Table of Contents}
 
 % Fill in the following
-\title{Thesis Title} % Title can't use formulae, symbols, superscripts, subscripts, greek letters, etc. all of which should be replaced with word substitutes
-\author{Author Name}
+\title{Facilitating the practical adoption of Software Defect Prediction through better techniques and empirical evaluation} % Title can't use formulae, symbols, superscripts, subscripts, greek letters, etc. all of which should be replaced with word substitutes
+\author{Hareem Sahar}
 
-\degree{\MSc}
-%\degree{\PhD} % uncomment respective degree
+\degree{\PhD} % uncomment respective degree
 
 \dept{Computing Science}  % Write Computing Science or Civil Engineering.
 
@@ -131,7 +174,7 @@ mincitenames=1,maxcitenames=2%
 %\field{Specialization Field}
 
 % Put the year that you submitted your thesis below
-\submissionyear{\number2019}
+\submissionyear{\number2025}
 
 %%%%%%%%%%%%%%%%%%%%%
 % Document Content  %
@@ -150,6 +193,17 @@ mincitenames=1,maxcitenames=2%
 
 \newcommand{\onlyinsubfile}[1]{#1}
 \newcommand{\notinsubfile}[1]{}
+
+%EMSE2019
+\newcommand{\linesref}[1]{Line~\ref{#1}\xspace}
+\newcommand{\figref}[1]{Figure~\ref{#1}\xspace}
+\newcommand{\secref}[1]{Section~\ref{#1}\xspace}
+\newcommand{\tabref}[1]{Table~\ref{#1}\xspace}
+\newcommand{\algoref}[1]{Algorithm~\ref{#1}\xspace}
+
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\np}{\ding{100}}%
 
 \begin{document}
 
@@ -177,7 +231,7 @@ mincitenames=1,maxcitenames=2%
 % guidelines (https://www.ualberta.ca/computing-science/graduate-studies/current-students/dissertation-guidelines)
 % The comparison document lists an optional dedication page, but no quote page.
 
-\subfile{\main/tex/dedication.tex}
+%%\subfile{\main/tex/dedication.tex}
 \subfile{\main/tex/quote.tex}
 
 \subfile{\main/tex/acknowledgements.tex}
@@ -218,21 +272,25 @@ mincitenames=1,maxcitenames=2%
 % See FGSR requirements for any additional requirements on the body
 
 \subfile{\main/tex/introduction.tex}
+\subfile{\main/tex/background.tex}
+\subfile{\main/tex/emse.tex}
+\subfile{\main/tex/irjit.tex}
 \subfile{\main/tex/conclusion.tex}
 
 % Renaming the bibliography: See http://tex.stackexchange.com/questions/12597/renaming-the-bibliography-page-using-bibtex
 \renewcommand\bibname{References}
 \clearpage\addcontentsline{toc}{chapter}{\bibname}
      %add the above line to get "References" in the table of contents.
-%
+     
 \singlespacing % optional;  Bibliography is better in single spacing
-               %            but you may choose different
-               %            Don't use \singlespacing if your thesis
-               %            is already in single spacing
+%            but you may choose different
+%            Don't use \singlespacing if your thesis
+%            is already in single spacing
 %
 \printbibliography
 
 \doublespacing
+
 
 % Appendices are optional.
 %

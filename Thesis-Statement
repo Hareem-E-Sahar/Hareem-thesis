@@ -1,0 +1,14 @@
+Hazel's 
+An n-gram language model can be used to find errors in source code resulting
+in more precise reports of the location of errors. Term Frequency–Inverse
+Document Frequency (TF-IDF) representation can be used to cluster crash
+reports automatically, leading to clusters that are more representative of the
+bugs that caused the crashes.
+In order to evaluate the above thesis statement, I will use the MRR score
+to measure how precise reports of the locations of errors are and the B-Cubed
+F1-score to measure how representative buckets are of the bugs that caused
+crashes.
+
+
+
+
