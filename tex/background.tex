@@ -20,4 +20,34 @@ We plot an equation in figure \ref{fig:plot}.
     % Put the label *after* the caption, but inside the float
 \end{figure}
 
+
+\section{Empirical Software Engineering}
+Empirical Software Engineering is the study of Software in an empirical way using the ample data available in software repositories. This data can be about different aspects of software including software artifacts such as source code, and bugs, and developers, and their discussions. The data contains useful information that can be leveraged to make developer assistance tools. Software community has a dedicated conference named Mining Software Repositories to assist this line of research. 
+\section{Information Retrieval}
+Information Retrieval is the extraction of relevant information from unstructured documents. It is mainly used in Natural Language Processing (NLP) works to analyse natural language text. The seminal work of Hindle et al. proposed that source code can be treated as natural language. Following this, researchers have extended NLP techniques to operate on source code available in software repositories to produce tools such as syntax error detectors. Santos et al. used large language models trained on correct source code to detect out of place tokens and produce fixes by by consulting the language models to determine the most likely correct. Information retrieval has also been used for detecting and preventing duplicate bug reports. TF-IDF is a commonly used model in information retrieval which works by computing the term frequencies and inverse document frequency. This means it favours terms that are frequent enough to be interesting but are otherwise not common across documents.
+
+% Abram's paper A common model used in information retrieval is TF-IDF: term frequency multiplied by inverse document frequency. This produces a vector of normalized word counts by “interestingness” in terms of how rare a word is. Cosine distance is the angle distance between two vectors and is a common distance function used to compare documents because it normalizes word counts and vectors by size. In Panichella et al. (2016) they found many of their optimal configurations used the TF-IDF vector space model (VSM) and cosine distance. Much like TF-IDF and cosine distance, Sun et al. (2011) exploited BM25 and BM25F for query result scoring and ranking. VSM and different configurations of TF-IDF have been explored in bug localization by Wang et al. (2014) to find impacted files.
+
+\section{Validation methodologies in software engineering and time travel}
+Hindle et al. propose that there are three main contexts of evaluation: time agnostic validation, continuous training, and historical splits validation. The time agnostic validation does not regard time and is unrealistic because in real world software artifacts appears at a particular time and in a specific order during software evolution. This context enables cross-fold validation and due to a lack of empirical data in some use cases researchers pragmattically rely on this method of evaluation. This type of evaluation poses a fundamental threat to the validity of results because we are relying on data that does not exist and hence time traveling to build a model. Rakha et al. refer to such an evaluation as ``classical evaluation" and claim that it unrealistically boosts performance by 17 to 42\%.
+Continuous training. %should these be included 
+Historical splits validation.%should these be included 
+
+ 
+
+\section{Source code similarity}
+\section{Source Code Representation}
+Depending on the representation such as raw text, AST, or Graph you use a similarity measure to determine similarity of documents.
+
+\subsection{Tree kernels} 
+Tree kernels is a method of comparing trees and computing similarity between them by computing matching sub-parts.
+\section{Clone detectors}
+\subsection{Information Retrieval measures}
+
+\section{Software Defect Prediction}
+\subsection{Just-in-time software defect prediction}
+Just-in-time is a way to preemptively detect risky commits before they make it to the software repository.
+\section{Explainability in Software Engineering}
+Software is produced by humans for humans.
+
 \end{document}
