@@ -8,10 +8,17 @@
 
 % environment for abstract.
 \begin{abstract}
-Your abstract here. 
-The abstract is not allowed to be more than 700 words and cannot include non-text content.
-It must also be double-spaced. 
-The rest of the document must be at least one-and-a-half spaced.
+%Your abstract here. 
+%The abstract is not allowed to be more than 700 words and cannot include non-text content.
+%It must also be double-spaced. 
+%The rest of the document must be at least one-and-a-half spaced.
+Software Defect Prediction (SDP) helps prioritize quality assurance efforts by identifying code changes likely to introduce bugs. Despite decades of research, the real-world adoption of SDP models remains limited due to concerns over their stability, practical deployability, and lack of explainability. This thesis investigates these limitations and proposes empirically grounded solutions to address them.
+
+First, I demonstrate that conclusions drawn from cross-project SDP models are often unstable over time. Using a time-aware evaluation framework, I show that model rankings and performance estimates vary significantly depending on when the evaluation occurs, challenging the generalizability of prior findings. Second, by utilizing the insight gained from the first study, I propose IRJIT. It is a lightweight and explainable just-in-time SDP approach based on information retrieval. IRJIT avoids complex training, and enables real-time updates. Its evaluation accounts for the chronological order of defect data and incorporates verification latency. The approach provides explainability by linking predictions to similar historical commits, and providing developers with line-level risk assessments. Finally, in this thesis, I explore the benefits of structural code representations through tree kernels to capture syntactic similarity in source code, offering a complementary perspective to token-based methods and paving the way for hybrid models.
+
+Together, these contributions provide a foundation for building SDP models that are not only accurate, but also practical, transparent, and temporally robust. 
+%Can we call them temporally robust?
+
 \end{abstract}
 
 \end{document}

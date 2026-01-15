@@ -1,0 +1,670 @@
+\documentclass[../thesis]{subfiles}  % Reference your thesis file
+
+\begin{document}
+	\chapter{An Empirical Evaluation of Tree Kernels for Source Code Retrieval}
+	\label{chp:treekernels}
+	
+	\textcolor{blue}{This chapter empirically evaluates the effectiveness of tree kernels for similarity based source code retrieval, and is under review at the empirical software engineering (EMSE) journal 2025}
+\section{Introduction}
+\label{lab:intro}
+%% Labels are used to cross-reference an item using \ref command.
+%%Section text. See Subsection \ref{subsec1}.
+
+Tree kernels~\cite{treekernels2001,STK} are a powerful method for measuring similarity between structured data by counting common substructures, such as subtrees. The greater the number of shared substructures, the higher the kernel value, indicating a stronger similarity between trees. Unlike traditional machine learning methods that rely on feature vectors or sequences, tree kernels inherently account for hierarchical relationships and structural patterns, making them particularly suited for tasks where structural representation is crucial. 
+
+Tree kernels have demonstrated significant success in fields like natural language processing (NLP)~\cite{STKoptimal} and bio-informatics~\cite{vert2002tree}, where hierarchical data plays a central role. In these domains, tree kernels effectively analyze parse trees~\cite{treekernels2001}, dependency graphs, and molecular structures, facilitating tasks such as pattern recognition~\cite{mahe2009graph,graphkernels}, classification, and similarity measurement. Despite the structured nature of source code, typically represented as Abstract Syntax Trees (ASTs), tree kernels remain underutilized in Software Engineering.
+
+In contrast, embeddings have become a dominant approach in software engineering due to the vast amount of data available in GitHub repositories, enabling the learning of meaningful representations through extensive training~\cite{feng2020codebert}. However, a key challenge of applying code embeddings is their generalizability for downstream tasks for which they are not trained~\cite{ding2023towards,ding2022can}.
+Furthermore, embeddings lack interpretability~\cite{li2022interpretable}, obscure rich structure inherent in the code~\cite{ding2023towards}, and are less effective when applied to scenarios where limited software histories are available~\cite{kotsiantis2024ai}, such as early-stage proprietary software or legacy systems that are not well-represented in public code~\cite{ahmed2024studying}. In such cases, tree kernels could be a promising alternative. They operate directly on structured data, preserve hierarchy and provide explainable similarity comparisons, critical for applications requiring transparency and detailed understanding of code behavior.
+
+%% To Do: Has anyone looked into how embeddings from public repos perform in proprietary code? in other words has anyone done out of distribution analysis - Yes
+
+In this work, we argue that software engineering could benefit from adopting tree kernels as an alternative to existing methods. We propose that, instead of traditional sequence alignment, tree kernels can be used to compare code sequences organized into tree structures, capturing more complex relationships than linear alignment allows. By enabling structure-based similarity measurement and retrieval, tree kernels offer a more powerful alternative to current techniques, facilitating direct comparisons of hierarchical code representations without the need for manual transformations or specialized feature extraction.
+
+
+
+This paper investigates the usefulness of tree kernels in Software Engineering, with a particular focus on their application to source code retrieval. In this setting, a code fragment is used as a query, and the goal is to retrieve and rank the matched fragments from the corpus. Although this task is closely related to clone detection, our formulation differs from traditional clone classification: we model it as a ranked retrieval problem rather than a binary decision problem. This distinction is important because it aligns with realistic code-search scenarios and allows us to evaluate systems using ranking-based metrics such as Precision@k, MRR, MAP. Throughout the paper, we use source code retrieval and source code search interchangeably. To assess the effectiveness of tree kernels in this retrieval-oriented setting, we empirically evaluate three widely studied kernels--Subtree Kernel (STK)~\cite{STK}, Partial Tree Kernel (PTK)~\cite{PTK}, and Subset Tree Kernel (SSTK)~\cite{STK}.
+
+Our experiments on an existing benchmark dataset show that tree kernels outperform TF-IDF~\cite{tfidf2002}, a widely used token-based baseline, and CodeBERT~\cite{feng2020codebert}, a popular embedding-based model, in our setting. However, tree kernels incur substantially higher computational cost, making them less practical as standalone retrieval methods. To address this limitation, we introduce a hybrid retrieval approach that combines TF-IDF with tree kernel re-ranking, reducing overall retrieval time by up to 95\% while maintaining competitive precision and ranking performance relative to the baseline. 
+	
+This paper contributes to Software Engineering research by empirically investigating the structural matching capabilities of tree kernels and examining their potential role as an alternative or complementary technique to existing code retrieval methods. The key contributions of this paper are as follows: 
+\begin{itemize} 
+	\item An evaluation of three tree kernels---Subtree Kernel, Subset Tree Kernel, and Partial Tree Kernel---for source code retrieval based on structural similarity.
+	\item  An analysis of how tree kernels capture varying levels of syntactic detail in source code.
+	\item An analysis of the relationship between tree kernel performance, function size, and AST complexity.
+	\item A comparison of tree kernel performance with token-based and embedding-based baselines, as well as a hybrid retrieval approach for source code similarity.
+	 
+\end{itemize}
+
+%%TO DO {Instead of the main contributions, we could list main findings because its an empirical study and may be findings are more relevant}
+
+%The rest of the paper is structured as follows. Section~\ref{lab:TK_background} and ~\ref{lab:relatedwork} discusses the background reading material and related work. Section~\ref{lab:case_study} explains our empirical evaluation methodology. Section~\ref{lab:results} presents results followed by a discussion in Section~\ref{lab:discussion}. Section~\ref{lab:limitations} discusses the limitations of our study, and Section~\ref{lab:conclusion} concludes the paper. 
+
+\section{Tree Kernel Methods}
+\label{lab:TK_background}
+%TO DO: How close these definitions are to the source material?
+Tree kernels~\cite{vert2002tree,STK} compare two trees and measure their similarity by counting the common substructures (subtrees) between them. They operate by projecting data to a higher dimension feature space, where actual points need not be known but the dot product has to be known. The definition of a new tree kernel for a given problem requires specifying a set of features and a kernel function to compare trees in terms of their features~\cite{corazza2010tree}. Between two trees \textit{T}\textsubscript{1} and \textit{T}\textsubscript{2}, a kernel \textit{K(T}\textsubscript1, \textit{T}\textsubscript2\textit{)} can be represented as an inner product between two vectors:
+\begin{equation}
+	K(T_{1}, T_{2}) = h (T_{1}) \: h (T_{2}) 
+\end{equation}
+
+Each tree \textit{T} can be represented in a vector format as follows, where \textit{h}\textsubscript{i}\textit{(T)} is the number of occurrences of the \textit{i}\textsuperscript{th} subtree in \textit{T}.
+
+\begin{equation}
+	\textit{h(T)} = (h_{1}(T), h_{2}(T), . . . , h_{n}(T))
+\end{equation} 
+
+Subtree Kernel (STK)~\cite{STKoptimal} is a convolution kernel that evaluates the number of common subtrees between two given trees, where a subtree is defined as a node and all its children, excluding terminals. In other words, a Subtree rooted in a node always contains all of that node's descendants until the leaves. This kernel is straightforward in its approach, capturing complete hierarchical units within the tree such as an entire method, or a loop.  
+%% Rquires exact matches in both structure and node labels, making it very strict. The feature set of the ST kernel is considered "rather poorer" than that of the SST kernel.
+
+Subset Tree Kernel (SSTK)~\cite{STKoptimal}, on the other hand, focuses on specific fragments of subtrees. Unlike subtrees, subset trees do not treat single nodes as individual trees, and the leaves of subset trees can be either terminal symbols or internal (non-terminal) nodes, providing additional flexibility. When constructing subset trees, a node is either considered with all of its children or none of them. This means that the descendancy can be incomplete in depth, but no partial productions are allowed. As a result, there are generally more subset trees than subtrees for a given sentence, providing a richer basis for comparison.
+% SST explicitly allows non-terminal symbols as leaves
+% partial production are not allowed—a node either comes with all children or is excluded.
+
+Partial Tree Kernel (PTK)~\cite{PTK} is a convolution kernel that considers partial trees shared between two trees i.e., nodes and their partial descendancy~\cite{filice2017kelp}. This kernel allows for even more flexibility by capturing partial structures, enabling comparisons that do not require fully intact subtrees, thus capturing overlapping and partial similarities. Figure~\ref{fig:trees} shows the AST representation, some subtrees, subset trees, and partial trees for a variable declaration and initialization statement such as $int \:\, i = 0;$ 
+
+\begin{forest}
+	[VariableDeclarationStatement
+	[PrimitiveType(int)]
+	[VariableDeclarationFragment
+	[SimpleName(i)]
+	[NumberLiteral(0)]
+	]
+	]
+\end{forest}
+
+%
+%\begin{forest}
+%	for tree={
+%		grow'=south,
+%		parent anchor=south,
+%		child anchor=north,
+%		align=center,
+%		inner sep=2pt,
+%		edge={->},
+%	}
+%	[VariableDeclarationStatement
+%	[PrimitiveType
+%	[int]
+%	]
+%	[VariableDeclarationFragment
+%	[SimpleName [i]]
+%	[NumberLiteral [0]]
+%	]
+%	]
+%\end{forest}
+
+
+%\begin{figure}
+%	\centering
+%	\subfigure[AST]{\includegraphics[scale=0.45]{Figures/a-tree.pdf}}
+%	\vspace{0.6cm}  
+%	
+%	\subfigure[Subtree Trees]{\includegraphics[scale=0.45]{Figures/b-subtree.pdf}}
+%	\vspace{0.6cm}  
+%	
+%	\subfigure[Subset Trees]{\includegraphics[scale=0.45]{Figures/c-subset.pdf}}
+%	\vspace{0.6cm}  
+%	
+%	\subfigure[Partial Trees]{\includegraphics[scale=0.45]{Figures/d-partialtree.pdf}}
+%	
+%	\caption{(a) An AST for the expression \textit{int i=0;} (b) some Subtrees, (c) some Subset trees, (d) some Partial trees}
+%	\label{fig:trees}
+%\end{figure}
+%%We argue that our results should be useful for any SE task that relies on analyzing code similarities.
+
+\section {Related Work}
+\label{lab:relatedwork}
+
+In this section, we discuss various source code representations and their roles in code search and retrieval, as well as clone detection.
+
+\paragraph{\textbf{Source Code Representations.}}
+Source code can be represented as raw text, a bag of tokens or words, or a set of paths. At a higher level of abstraction, it is represented as a tree or graph~\cite{zhang2019novel}. In this paper, we use ASTs, a tree-based data-structure, to represent the syntactic structure of source code~\cite{AST2005understanding}. 
+%An AST consists of several nodes where each node represents a program construct such as a variable, an if-else condition, or a logical operator. The nodes are connected from top to bottom in a way that each node has a parent node from which the child node descends.
+An AST is at a higher level of abstraction than the actual program. ASTs capture the essential structure of code, representing relationships between code elements such as function calls, loops, and conditionals, while excluding syntactic redundancies like punctuation and parentheses. Due to these properties they provide an intermediate code representation~\cite{zhang2019novel} which is suitable for various software engineering tasks such as code clone detection~\cite{baxter1998clone}, defect prediction, and automated program repair/transformation. 
+Code snippets can also be represented as continuous distributed vectors~\cite{alon2019code2vec}, known as embeddings, which capture the semantic meaning and relationships between code elements. Similar snippets have similar embeddings, allowing us to predict semantic properties even when their textual representations do not match~\cite{ben2018neural}.
+
+
+\paragraph{\textbf{Code Search and Retrieval.}}
+Source code search and retrieval is a recurring problem in software engineering, especially in large repositories where developers need to locate relevant implementations, usage patterns, or algorithmic structures. Early approaches treated code as flat token sequences and applied classical information-retrieval (IR) models such as TF–IDF. Sourcerer~\cite{sourcerer2009} is a notable token-based approach that relies on token frequency overlap and identifier matching. These techniques work well for literal or near-literal matches, but they struggle when structurally similar code exhibits little lexical overlap. Even small lexical variations—renaming variables, introducing helper statements, or using different control keywords—can obscure deeper structural similarity.
+
+To address such limitations, later systems introduced richer contextual or structural representations.
+Lancer~\cite{lancer} incorporates context with library-sensitive language modeling to recommend relevant code based on partial or incomplete queries. FaCoY~\cite{facoy} goes further by leveraging API–usage patterns to identify code with similar interaction behavior. Aroma~\cite{aroma} extracts recurring structural patterns from parse trees and is particularly effective for recommending small, idiomatic fragments such as error-handling wrappers. While these systems marked important progress, they still rely on manually designed abstractions or specific structural templates. As a result, they often miss deeper structural correspondences when developers express the same logic using different identifier names, minor statement rearrangements, or slightly different syntactic forms, even though the underlying shape of the AST may remain closely related.
+
+Neural approaches address some of these issues by learning distributed representations of code.
+Code2vec~\cite{alon2019code2vec} demonstrated that AST path contexts capture structural regularities that humans intuitively recognize (e.g., “method that returns a boolean based on field comparison”). However, since the model is trained primarily for method-name prediction rather than retrieval, its embeddings sometimes reflect naming conventions more than behavior. Transformer-based models such as CodeBERT~\cite{feng2020codebert} incorporate both code and natural language supervision, improving performance on imprecise or short queries. Yet, these models typically require aggressive normalization or flattening of tree structure during preprocessing, and their learned representations tend to blur fine-grained syntactic distinctions in favor of broader statistical patterns.
+
+Graph-based methods take a more semantic perspective.
+CodeKernel~\cite{gu2019codekernel}, for instance, encodes object-usage and data-flow graphs to retain relationships across statements. Such graph encodings can capture aspects of program behavior more directly than sequence-based methods, but they are computationally expensive and sensitive to parsing quality. They often require type resolution and complete syntactic information, which can limit applicability in heterogeneous or partially incomplete codebases—a common situation in large-scale repository mining.
+
+Tree kernels occupy an intermediate space between token-based and graph-based representations.
+They allow direct comparison of abstract syntax trees by counting shared substructures without explicitly enumerating features or designing handcrafted templates. Unlike neural models that linearize or heavily normalize structure, tree kernels operate directly on the hierarchical organization of the AST, preserving the relationships between nodes and the recursive patterns that characterize algorithmic structure. As a result, they naturally recognize similarity across fragments that share core structural patterns but differ in surface-level details such as identifier names or minor syntactic choices. This makes tree kernels particularly well-suited for source code search scenarios where the goal is to retrieve functionally related code that shares structural organization even when its lexical form varies.
+
+
+\paragraph{\textbf{Clone Detection.}}
+Clone detectors are designed to identify duplicate or highly similar code fragments within a large codebase exploiting syntactic and structural details of the code, along with specific similarity measures, to identify matches~\cite{svajlenko2015}. Early approaches relied on textual and lexical analysis. \textit{Textual approaches} compare string sequences, such as comments and identifiers, while \textit{lexical or token-based approaches}~\cite{sourcerercc}~\cite{cpminer2006} abstract away various aspects of source code (e.g., identifiers and variable names) to focus on underlying code logic. SourcererCC~\cite{sourcerercc}, a notable approach in this category, used an optimized inverted index and filtering heuristics to identify exact and near-miss clones in large repositories. Its scalability makes it useful for code search tasks, such as finding reusable code, recommending patches, or identifying similar code for refactoring. 
+
+\textit{Tree-based approaches}, a subset of syntax-based methods~\cite{baxter1998clone,deckard2007}, capture structural similarities by hierarchically representing code as ASTs, effectively filtering out lexical differences. These approaches identify exact or near-identical subtrees either by employing tree matching algorithms or by fingerprinting subtrees using various metrics, where similar fingerprints suggest potential duplicates. For instance, Baxter et al.~\cite{baxter1998clone} used AST hashing to detect both exact and near-miss clones, while Wahler et al.~\cite{wahler2004clone} applied a frequent item-set technique on ASTs represented in XML format to identify clones with minor modifications. Among these techniques, Deckard~\cite{deckard2007} stands out. Deckard encodes structural information from ASTs into fixed-dimension characteristic vectors and then uses Locality Sensitive Hashing (LSH) to cluster these vectors based on their Euclidean distances, thereby identifying structurally similar code fragments. \textit{Semantic approaches}, on the other hand, use Control Flow Graphs (CFGs), program dependency graphs (PDGs)~\cite{komondoor2001} and semantic embeddings to capture deeper program behavior. PDG-DUP~\cite{komondoor2001}  which is a prominent approach in this category finds isomorphic PDG subgraphs using program slicing.
+
+Recent work explored \textit{machine learning and deep learning approaches}~\cite{saini2018oreo} to enhance clone detection by learning representations of code from large datasets. Wang et al.~\cite{wang2020detecting} augmented ASTs with explicit control and data flow edges and then applied two different types of GNNs to measure similarity between code pairs. Yu et al.~\cite{yu2019neural} proposed an approach that captures both structural information from ASTs and lexical information from code tokens. They applied tree-based convolution over a token-enhanced AST to detect semantic clones. Zhang et al.~\cite{zhang2019novel} proposed a novel AST-based neural network (ASTNN) for source code representation, which splits large ASTs into smaller statement trees, encoding them into vectors to represent an entire code fragment. Their approach improved the F1 score from 82\% to 93.8\% and 59.4\% to 95.5\% on two clone detection benchmarks. 
+
+
+%The related work section has explored a wide range of source code representations, from token-based models to AST encodings, and discussed their application in tasks such as source code retrieval and clone detection. While these approaches have shown promising results, many rely on representations that overlook deeper syntactic structures. 
+
+%Notably, structural representations--particularly tree kernels, which provide a principled way to model code structure--remain underexplored for source code search retrieval. This work fills that gap through a comprehensive evaluation of tree kernel methods across different levels of syntactic similarity, examining how structural information influences retrieval effectiveness.
+In summary, prior work on source code retrieval and clone detection spans token-based similarity, API usage and structural heuristics, neural embeddings, and graph-based semantic modeling. While these approaches have advanced the state of code search, many rely on representations that either flatten code structure or require handcrafted abstractions, making it difficult to capture fine-grained syntactic organization that distinguishes structural similarity from surface resemblance. 
+
+Tree kernels offer a principled alternative by comparing code directly through its abstract syntax structure, without explicit feature engineering or structural simplification. However, despite their suitability for capturing hierarchical code patterns, they have not been systematically evaluated for source code retrieval in modern large-scale settings. Our work addresses this gap by investigating the effectiveness of tree kernel methods across varying degrees of syntactic similarity, assessing how structural information impacts retrieval performance.
+
+
+
+\section{Case Study Setup} 
+\label{lab:case_study}
+In this section, we elaborate our research goals and questions, and explain our empirical evaluation setup including the choice of dataset and metrics.
+
+\subsection{Dataset} 
+To benchmark the performance of tree kernels for source code retrieval, we require a ground truth dataset with known similarity values. BigCloneBench~\cite{svajlenko2015}, which includes an evaluation framework called BigCloneEval~\cite{svajlenko2016bigcloneeval}, is publicly available for this purpose. BigCloneBench provides pairs of code examples with a syntactic similarity score (ranging from $0$ to $1$) that indicates how similar the examples are to each other. The benchmark was created by mining code clones from the IJaDataset $2.0$ repository~\cite{ija}, which contains 25,000 subject systems and spans 365 million lines of code (MLOC).
+For all evaluations, we sample data from the BigCloneBench benchmark, which includes clones of various types that naturally differ in the level of structural and syntactic variation they introduce. This diversity makes BigCloneBench well-suited for evaluating the effectiveness of tree kernels in detecting similarities and differences in code structure. 
+\subsection{Research Questions}
+% TO DO: See Aroma's TFIDF part
+We empirically evaluate three tree kernels; STK~\cite{STK}, SSTK~\cite{STK}, and PTK~\cite{PTK}, and compare their  performance with token-based and embedding-based approaches on source code retrieval task.
+
+\begin{itemize}
+	\item{\textbf{RQ1: What is the performance of three tree kernels for source code retrieval?}}\\	
+	\textit{\underline{Motivation:}} In this research question, we evaluate and compare the code retrieval performance of different tree kernels including STK, SSTK, and, PTK. By testing each type of tree kernel on sampled data, we assess their feasibility for a typical software engineering task. We show their performance relative to each other and the baselines. \\
+	
+	\item{\textbf{RQ2: To what extent do tree kernels effectively detect syntactic similarities in source code, as measured by their performance on Type-1, Type-2, and Type-3 code clones?}}\\
+	%TO DO: Make falsifiable. Abram says its not falsifiable also you really are testing performance on clone types.
+	\textit{\underline{Motivation:}} This research question examines the effectiveness of tree kernels in detecting both surface-level and deeper syntactic similarities in source code.
+	By applying three different tree kernels to specific categories of code clones (Type-1, Type-2, and Type-3), we aim to determine which category is best captured by tree kernels. This evaluation enables a fine-grained evaluation of their robustness to syntactic variation\\
+	%This is a broader question about how well tree kernels as a technique (regardless of the specific type of kernel) handle different categories of code similarity (e.g., exact matches, renamed identifiers, refactored code).
+	
+	%%This work analyzes how tree kernels behave across a spectrum of syntactic similarity levels, rather than treating all code pairs as equally comparable. It signals a fine-grained evaluation of their robustness to syntactic variation — an important contribution in source code retrieval research.
+	
+	\item{\textbf{RQ3: Does a particular tree kernel obtain higher retrieval performance on larger high complexity Abstract Syntax Tree structures than the other kernels?}}\\ 
+	
+	\textit{\underline{Motivation:}} This research question explores how effectively different tree kernels (STK, SSTK, and, PTK) handle the complexity and variability of source code. We analyze if one kernel type performs better on deeper, larger, or  structurally more complex ASTs than others.\\
+	%%By complexity, we refer to both the size (in terms of depth and breadth) and the structural intricacies of the ASTs. 
+	
+	\item{\textbf{RQ4: Can we achieve a faster run time by reducing the number of tree kernel computations without degrading retrieval performance?}}\\
+
+	%Abram's suggested %Do we lose IR performance by combining TF-IDF indexing to reduce n in O(n^2) comparison method?
+	%Does reducing the number of tree kernel computations using TF-IDF indexing improve run time while maintaining retrieval performance, 
+	%Can we make tree kernel retrieval faster by reducing the number of tree kernel computations?}\\
+	%Can the use of Tree Kernels enhance the performance of hybrid models when integrated with traditional machine learning or token-based representations?
+	\textit{\underline{Motivation:}} This research question explores whether a hybrid model can balance efficiency and accuracy by combining a fast token-based method with tree kernels. Token-based methods, such as TF-IDF and BM25, are significantly faster than tree kernels but often struggle to capture structural similarities.
+	By combining tree kernels and token-based into a single model, we aim to evaluate whether retrieval performance can be maintained while significantly improving runtime efficiency.
+
+	We hypothesize the hybrid model will achieve competitive retrieval performance compared to a pure tree kernel model, while significantly reducing runtime.
+	Moreover, we expect that the hybrid method will outperform the baseline token-based model in retrieval accuracy, due to the additional structural analysis introduced by tree kernels.\\
+
+\end{itemize}
+
+
+\subsection{Evaluation Setup}
+To answer the aforementioned research questions, we conducted several experiments. This section outlines the experimental setup, including the baselines, implementation details, and evaluation metrics.
+
+\subsection{Baselines}
+%Comparing it with tree kernels allows us to understand how much value structural information adds over traditional lexical representations prevalent in information retrieval.
+For our first baseline, we selected a simple token-based approach: TF-IDF~\cite{tfidf2002}, which quantifies the importance of a token based on its frequency within a document and its rarity across the corpus. Term frequency (TF) reflects how often a token appears in a document, while inverse document frequency (IDF) down-weights tokens that are common across many documents, such as frequently used programming language keywords. We chose TF-IDF because it is a well-established and widely used method in information retrieval, with prior research~\cite{sahar2024irjit} demonstrating its effectiveness in source code retrieval tasks.
+
+However, TF-IDF does not capture the syntactic or structural relationships within source code. In contrast, tree kernels encode such structure, making them well-suited for tasks where syntax and context play a significant role. By comparing tree kernels with TF-IDF, we aim to assess the added value of structural information over traditional lexical representations. This comparison also helps determine whether the increased complexity of tree kernels is justified by measurable improvements in retrieval performance. 
+
+Recent advances in code representation learning lead to the popularity of embedding-based models such as CodeBERT~\cite{feng2020codebert}, which are trained on large-scale programming corpora. These models capture semantic relationships between code fragments beyond surface-level token overlap. Prior work has shown their effectiveness in code search, clone detection, and related software engineering tasks. Therefore, alongside TF-IDF, we compare tree kernels against another baseline, CodeBERT, to understand whether explicitly modeling syntactic structure offers advantages over leveraging pre-trained semantic representations. This comparison positions tree kernels relative to both lightweight lexical methods and state-of-the-art neural embeddings.
+
+
+\subsubsection{Implementation details} 
+%\subsubsection{Generating ASTs}
+Before computing tree kernel similarity we pre-process the dataset to obtain the ASTs.
+We transform the sampled methods into their AST notation using GumTree~\cite{falleri2014fine}, which is a source code parsing and differencing library\footnote{https://github.com/GumTreeDiff/gumtree}. Later, we convert the trees into their s-expression form so they can be used for kernel computation. Listing~\ref{jsonlisting1} shows an example code snippet, whose corresponding AST in s-expression notation is shown in Listing~\ref{jsonlisting3}. 
+\begin{lstlisting}[language=Python, caption= An example Java code snippet,label=jsonlisting1]
+public class Example {
+	public String foo(int i) {
+		if (i == 0) {
+			return "Foo!";
+		} 
+		return "Not Foo!";
+	}
+}\end{lstlisting}
+	
+Finally, we retrieve matches of a given query snippet by computing its tree kernel similarity with the snippets in the corpus leveraging KeLP\footnote{https://github.com/SAG-KeLP/kelp-full} tree kernel library. KeLP is a Java based framework that provides the implementation of kernel functions over strings, trees, and graphs~\cite{filice2017kelp}. For all evaluations, we rely on the default hyperparameter settings from the KeLP library. The decay factor LAMBDA and MU were set to $0.4$, and the terminal factor was set to $1$. 
+
+The output of KeLP is a numeric similarity value indicating how similar two trees are. However, because tree sizes vary, raw similarity scores can differ substantially across queries. To ensure comparability, we normalize these scores using KeLP's Normalization Kernel~\footnote{\url{http://www.kelp-ml.org/kelp-javadoc/current-version/it/uniroma2/sag/kelp/kernel/standard/NormalizationKernel.html}}, which scales each similarity value by the self-similarities of the corresponding trees. This normalization maps all similarity values to the range [0,1], making them directly comparable across queries. We then rank matches based on these normalized similarities and select the top results to compute evaluation metrics.
+	
+	%PartialTreeKernel treeKernel = new PartialTreeKernel(0.4f, 0.4f, 1,"tree"); %SubTreeKernel treeKernel = new SubTreeKernel(0.4f,"tree");              	%SubSetTreeKernel treeKernel = new SubSetTreeKernel(0.4f,"tree");
+	
+	\noindent
+	\begin{minipage}{\textwidth}
+	\begin{lstlisting}[language=Python, caption= KeLP suitable representation of the abstract syntax tree (AST) generated from Listing~\ref{jsonlisting1} using Gumtree library. This AST is shown in s-expression format used by KeLP., label=jsonlisting3]
+	(CompilationUnit(TypeDeclaration(Modifier:public)(TYPE_DECLARATION_KIND:class)(SimpleName:Example)(MethodDeclaration(Modifier:public)(SimpleType(SimpleName:String))(SimpleName:foo)(SingleVariableDeclaration(PrimitiveType:int)(SimpleName:i))(Block(IfStatement(InfixExpression(SimpleName:i)(INFIX_EXPRESSION_OPERATOR:==)(NumberLiteral:0))(Block(ReturnStatement(StringLiteral:<STR>))))(ReturnStatement(StringLiteral:<STR>))))))\end{lstlisting}
+	\end{minipage}
+	
+	
+	For our token-based model, we built an inverted index using the methods from our dataset as corpus. This index is implemented with  Elasticsearch\footnote{https://www.elasticsearch.org/}, which is a full-text search engine built on top of the Apache Lucene library\footnote{https://lucene.apache.org/}. Each indexed document contains the source code of the method along with the necessary metadata to identify it.
+	The index employs a whitespace tokenizer combined with a lowercase filter to normalize the terms. For each sampled method, we query the index and retrieve the top 100 similar methods from the indexed corpus. To retrieve similar methods, we use \textit{more\_like\_this} query\footnote{https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-mlt-query.html} in Lucene, which utilizes the term frequencies and inverse document frequencies of the source code to identify methods that closely match a given query. Similarity scoring in Lucene is based on the BM25\footnote{https://en.wikipedia.org/wiki/Okapi\_BM25} scoring function, which is a probabilistic variant of TF-IDF incorporating term-frequency saturation and document-length normalization. 
+		
+	For the embedding-based baseline, we tokenize each method in the corpus and feed it to the pre-trained CodeBERT~\cite{feng2020codebert} model to obtain contextualized token embeddings. To represent a method as a single vector, we apply CLS pooling over its token embeddings. The embedding vectors for the query methods are generated in the same way. We then compute pairwise cosine similarities between the query and corpus methods. Finally, we rank the corpus methods in descending order of similarity scores to retrieve the most likely clones of a query methods.\\
+	
+	\subsubsection{Evaluation Metrics}
+	Our evaluation is based on several ranking-based metrics, which are frequently used in prior code retrieval research~\cite{wen2016locus},\cite{facoy},\cite{hindle2019preventing}. Precision@k (Prec@k) computes the relevant responses in the Top-K ranked list of results for query \textit{q}. For a set of $|Q|$ queries, Precision@k is calculated as follows:
+	\begin{equation}
+	Precision@k = \frac{1}{|Q|} \sum_{q=1}^{|Q|} \frac{|relevant_{q,k}|}{k}
+	\label{eq:precEq}
+	\end{equation}
+
+Mean Reciprocal Rank (MRR) is a rank-based measure used in evaluations where the user is looking for the best match. Both Precision@k and MRR were previously used in the evaluation of code-to-code search engines such as FaCoY~\cite{facoy} and for querying duplicate bug reports~\cite{hindle2019preventing}. Prior works that emphasize the most on the first match use this evaluation measure.
+For a set of queries, MRR averages the reciprocal rank of the first relevant result returned against a query \textit{q}. If no relevant result is found, the reciprocal rank is defined as 0. The reciprocal rank for a query \textit{q} is given by $\frac{1}{rank_q}$, where $rank_{q}$ is the rank position of the first relevant match for query. 
+For a set of $|Q|$ queries, the MRR is computed as follows
+
+\begin{equation}
+MRR=\frac{1}{|Q|}{ \sum_{q=1}^{|Q|}} \frac{1}{rank_q}
+\label{eq:MRR}
+\end{equation}
+
+
+Mean Average Precision (MAP) is suitable for evaluating approaches that produce multiple responses against each query, ordered by their probability of correctness. MAP incorporates the trade-off between precision and recall, making it a suitable metric for most detection and ranking applications~\cite{hindle2019preventing}\cite{wen2016locus}. MAP is appropriate for our evaluation because usually there are more than 1 matching code fragments that could be returned for a given query.
+For a set of queries, MAP is computed by first calculating average precision (AP) scores for each query \textit{q}.
+The AP (Eq.~\ref{eq:AP}) measures the average of the precision values at the ranks where relevant documents are retrieved.
+\begin{equation}
+\text{AP} = \frac{\sum_{k=1}^{N} P(k) \cdot \text{rel}(k)}{\text{Number of relevant documents}}
+\label{eq:AP}
+\end{equation}
+
+MAP is then obtained by taking the mean of these AP scores across the entire set of queries, as shown in Eq.~\ref{eq:MAP} below.
+\begin{equation}
+MAP=\sum_{q=1}^{|Q|}\frac{AP_q}{|Q|}
+\label{eq:MAP}
+\end{equation}
+MAP can also be computed at an early cutoff point, such as the top 100 retrieved results, which is referred to as MAP@100 in this paper.
+
+\paragraph{Threshold tuning} In our evaluation, we do not tune or specify a similarity threshold to determine relevance because our metrics evaluate the quality of the rankings produced by the model, rather than whether the similarity score exceeds a certain value.
+Accordingly, all candidate pairs are ranked in descending order of their normalized similarity scores, and these rankings are used to compute the evaluation metrics. As such, the evaluation depends on the relative ordering of scores, not on an absolute cutoff.
+A threshold would only be required in a binary classification setting (e.g., deciding whether two pairs are similar or not). In that case, a threshold could be set empirically or using validation data. However, this was not the case in our ranking-based evaluation.
+
+
+\section{Evaluation and Results} 
+\label{lab:results}
+
+\subsection{RQ1. Performance on source code retrieval task }
+\paragraph{\textit{Approach}} To evaluate the performance of tree kernels for source code retrieval, we ran an experiment on $100$ randomly sampled code fragments from the benchmark dataset. This sampling was necessary to make the experiment feasible, given the computational complexity of $O(n^2)$ comparisons when using the entire dataset. Each sampled code fragment serves as a query to retrieve matching instances from the remaining dataset based on tree kernel similarity. Specifically, we conducted pairwise comparisons between the query fragment and every other fragment in the corpus using the STK, SSTK, and, PTK. 
+
+The resulting matches are ranked according to their similarity values, and we compute performance metrics such as Prec@K, MRR, and MAP@100 to assess retrieval accuracy. To ensure robustness and mitigate the effects of random sampling, the experiment is repeated $10$ times, allowing us to report the distribution of each metric. 
+
+
+\subsubsection{RQ1 Findings}
+This section discusses the performance of evaluated tree kernels relative to each other. Figure~\ref{fig:rq1-topk} displays the Prec@K, MRR, and MAP metrics for the three tree kernels---PTK, SSTK, and STK---and compares their retrieval performance against the baseline models; TF-IDF and CodeBERT. The boxplots illustrate performance variations across $10$ repetitions of the experiment for each tree kernel. 
+
+The Prec@K of tree kernels ranges from $0.60$ to $0.71$. Specifically, the mean Prec@5 is $0.71$ for STK, $0.64$ for SSTK, and $0.68$ for PTK. This indicates that for STK, 71\% of the top retrieved results are relevant, which is quite high and suggests effective retrieval in the top 5 results. SSTK has a lower precision of 64\%, indicating that fewer relevant results were retrieved in this case, while PTK shows moderate performance with 68\%.
+As K increases from 5 to 10, all tree kernels exhibit a decline in precision, indicating the introduction of irrelevant results beyond the very top ranks. The Prec@10 for STK, PTK, and SSTK was $0.67$, $0.62$, and $0.60$ respectively.
+
+
+MRR performance is high for all tree kernels with STK leading the way by achieving a mean of $0.85$, followed closely by PTK and SSTK that achieved a mean of $0.82$, and $0.78$. This high MRR indicates that all tree kernels consistently identify the most relevant match at the top of the ranked results, which is beneficial for users seeking quick and accurate responses.
+
+The MAP@100 for tree kernels highlight an interesting contrast to the high MRR values. While the tree kernels demonstrate the ability to rank first relevant match at the top, their MAP@100 scores remain relatively low, indicating limited ability to consistently rank relevant results within the top 100 retrieved items. 
+STK achieves a mean MAP@100 of $0.38$, whereas, PTK, and SSTK both achieve $0.33$. This value further decreases when considering MAP over the full ranking (MAP), dropping to $0.26$ for STK, and to $0.20$ for the other two kernels. This shows that relevant documents are not effectively ranked as you move down the retrieved list. 
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\linewidth]{Figures/rq1-topk}
+	\caption{Comparison of tree kernel performance with the baselines on the basis of Prec@5, Prec@10, MRR and MAP@100 metrics. The y-axis represents  performance values for each metric.}
+	\label{fig:rq1-topk}
+\end{figure}
+
+
+Among the tree kernels, STK consistently outperforms PTK and SSTK, achieving higher retrieval performance across all metrics. It also surpasses the baseline models; TF-IDF and CodeBERT. TF-IDF attains a mean Prec@5 of $0.66$ and Prec@10 of $0.61$, which are 7\% and 9\% lower than that of STK ($0.71$ and $0.67$), respectively. These results suggest that the structural similarity captured by tree kernels provides a strong signal for clone retrieval compared to lexical overlap in the evaluated setting. A similar pattern is observed for MRR and MAP@100, where the baseline achieves mean values of $0.79$ and $0.35$, respectively, indicating less effective retrieval and ranking compared to the tree kernels, which outperform TF-IDF by 7.6\% and 8.6\%.
+
+
+
+CodeBERT exhibits the weakest retrieval performance across all metrics, with notably lower mean values (Prec@5 $0.49$, Prec@10 $0.46$, MRR $0.50$, and MAP@100 $0.18$). CodeBERT underperforms STK by 31\% in Precision, 41\% in MRR, and 53\% in MAP@100, demonstrating weaker early-rank accuracy and poor overall ranking consistency. This suggests that, in this setting, deep contextual embeddings do not translate into effective clone ranking.
+
+
+We conducted pairwise comparisons using the Wilcoxon signed-rank test to determine whether performance differences among the tree kernels and the baselines were statistically significant. Comparisons were performed both among the tree kernels and between the tree kernels and the two baselines, resulting in nine pairwise tests per metric: STK vs SSTK, PTK vs STK, PTK vs SSTK, PTK vs TF-IDF, SSTK vs TF-IDF, STK vs TF-IDF, PTK vs CodeBERT, SSTK vs CodeBERT, and STK vs CodeBERT. To account for multiple comparisons, we applied a Bonferroni correction per metric, adjusting the significance level to $\alpha = 0.05 / 9 = 0.0056$. We rejected the null hypothesis ($p < \alpha$) for all comparisons except PTK vs SSTK, PTK vs TF-IDF, and SSTK vs TF-IDF across all metrics, indicating statistically significant performance differences in all remaining cases. 
+
+Table~\ref{table:rq1_map_prec} also reports the observed run times for the evaluated methods in our study. All tree kernels are computationally intensive, with average execution times of 5,775 seconds for STK, 6,558 seconds for SSTK, and 7,071 seconds for PTK. 
+Among the tree kernel variants, STK is the most efficient, completing similarity computations faster than both SSTK and PTK. Its advantage arises from evaluating only complete subtrees, limiting potential combinations and thereby reducing computational complexity. In contrast, PTK accommodates partial and discontinuous matches within trees, greatly increasing the search space and making it the slowest kernel, particularly in large-scale comparison tasks.
+
+In comparison to tree kernels, the TF-IDF baseline completed in just $68$ seconds, highlighting the substantial computational gap between symbolic and token-based approaches. CodeBERT, meanwhile, required 17,260 seconds, which is approximately double the time spent by PTK to evaluate $100$ queries. However, the majority of this time is attributable to the one-time generation of corpus embeddings. Once embeddings are available, cosine similarity computation between a query and the corpus is nearly instantaneous, with a mean inference time of $366$ seconds per experiment. Thus, for embedding-based methods, retrieval time is primarily determined by the initial embedding phase rather than the similarity computation itself. In contrast, tree kernel evaluation time grows directly with the number of queries and pairwise similarity computations.
+
+\begin{table}
+	\centering
+	\caption{Mean metrics from 10 experimental runs conducted on STK, SSTK, and PTK. Each experiment involves 100 queries, with 50,532 pairwise tree kernel computations performed per query. CodeBERT and TF-IDF were evaluated using same set of queries.} 
+	\label{table:rq1_map_prec}
+	\begin{tabular}{l||r|r|r|r||r|}
+		\toprule
+		
+		\textbf{Technique } & \textbf{Prec@5} & \textbf{Prec@10} & \textbf{MRR} & \textbf{MAP@100} &  \textbf{Time}\\ 
+		
+		\cmidrule(lr){1-1}\cmidrule(lr){2-5}\cmidrule(lr){6-6}
+		PTK      &         0.68 & 		  0.62 	&         0.82  &         0.33 & 7,071  \\ %topk
+		STK      & \textbf{0.71}& \textbf{0.67} & \textbf{0.85} & \textbf{0.38}& 5,775  \\ %topk
+		SSTK  	 &         0.64 & 		  0.60  &         0.78  &         0.33 & 6,558  \\ %topk
+		TF-IDF	 &         0.66 &         0.61  &         0.79  &         0.35 & 68     \\ 
+		CodeBERT &         0.49 &         0.46  &         0.50  &         0.18 & \textbf{17,620} \\ %did not re-run
+		
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+
+\subsection{RQ2. Performance on clone types}
+\paragraph{\textit{Approach}} The BigClone benchmark categorizes code clones into four types: Type-1, Type-2, Type-3, and Type-4. 
+Type-1 clones represent exact matches, only differing by whitespace or comments. Type-2 are syntactically identical code fragments that differ by identifier names, data types or literal values. 
+Type-3 clones involve syntactic modifications, such as added, removed, or reordered statements. 
+Among these, Very-Strongly Type-3 (VST3) and Strongly Type-3 (ST3) clones are included in our evaluation because they retain substantial structural overlap, allowing tree kernels to meaningfully compare subtrees.
+In contrast, Weakly Type-3 and Type-4 clones involve extensive restructuring or alternative algorithmic implementations, making them unsuitable for tree-kernel similarity. Accordingly, we exclude these categories from our study.
+
+We then conducted independent experiments for each clone type included in our evaluation (Type-1, Type-2, and Type-3). For each experiment, we applied SSTK, STK, and PTK on randomly sampled $100$ code fragments from the corresponding clone category to serve as queries. Each query was used to search the remaining corpus for similar fragments. Following the approach in RQ1, we computed tree kernel similarity between the query and corpus fragments and ranked the results based on their similarity scores. Code fragments with the highest similarity were considered as the top matches. To improve robustness and account for randomness, each experiment was repeated $10$ times using different random seed values.
+
+Once rankings were generated, we evaluated retrieval performance (Prec@K, MRR, and MAP). This allowed us to analyze how well tree kernels capture different clone types--ranging from exact matches to renamed identifiers and lightly refactored code. Our objective here is not developing a clone detection method but to assess the strengths and limitations of tree kernels in capturing structural nuances in source code.
+
+
+\subsubsection{RQ2 Findings}
+To assess the effectiveness of tree kernels in detecting syntactic similarities in source code, we compared their performance against each other and against two baselines: TF-IDF, and CodeBERT, under fixed clone-type conditions. 
+
+We evaluated their ability to detect Type-1 (T1), Type-2 (T2), and Very Strong and Strongly Type-3 (T3) code clones using four metrics: Prec@5, Prec@10, MRR, and MAP. 
+Rather than comparing absolute metric values across clone types which may be affected by ground truth sizes, we focus on relative model rankings within each clone type to better understand the strengths and weaknesses of each approach. Figure~\ref{fig:type-plot} visualizes the performance of tree kernels--PTK, SSTK, and STK--across the evaluated clone types.
+
+
+
+\begin{table}[ht]
+	\centering
+		\caption{ Mean performance across 10 runs of PTK, STK, SSTK, TF-IDF, and CodeBERT of retrieving code with varying syntactic similarity (T1--T3). Bold values indicate the highest performance per metric.}
+		\label{tab:rq2-metrics}
+	\begin{tabular}{r||l||rrrr}
+		\toprule
+		 
+		 \textbf{Type} & \textbf{Kernel} & \textbf{Prec@5} & \textbf{Prec@10} & \textbf{MRR} & \textbf{MAP@100}  \\ 
+		\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-6}
+		   & PTK  	 		& \textbf{0.60} & \textbf{0.48} & \textbf{0.97} & \textbf{0.95} \\ 
+		   & SSTK 	 		& \textbf{0.60} & \textbf{0.48} & \textbf{0.97} & \textbf{0.95} \\ 
+\textbf{T1}& STK  	 		& 0.54 			& 0.44 			& 0.88 			& 		  0.90 \\ 
+		   & TF-IDF  		& 0.52 			& 0.43          & 0.85 			& 		  0.83 \\
+		   & CodeBERT		& 0.57 			& 0.47 			& 0.85 			& 		  0.83 \\
+		\midrule
+		   & PTK     		& 0.24 			& 0.16 			& 0.63 			& \textbf{0.63} \\ 
+		   & SSTK    		& 0.24 			& 0.16			& 0.62 			& 		0.62    \\ 
+\textbf{T2}& STK     		& \textbf{0.29} & \textbf{0.22} & \textbf{0.69} & \textbf{0.63} \\ 
+		   & TF-IDF  		& 0.22 			& 0.14 			& 0.53 			& 		0.47    \\
+		   & CodeBERT		& 0.22 			& 0.15 			& 0.35 			&	 	0.41    \\
+		\midrule
+		   & PTK     		& \textbf{0.32} & \textbf{0.28} & \textbf{0.47} & \textbf{0.27} \\ 
+		   & SSTK    		& 0.23			&         0.21  & 0.34          &     	  0.17  \\ 
+\textbf{T3}& STK     		& 0.30 			&         0.25  & \textbf{0.47} & 	      0.24  \\ 
+		   & TF-IDF  		& 0.21 			&         0.17  & 0.38          & 	      0.19  \\
+		   & CodeBERT		& 0.24 			&         0.24  & 0.26          &         0.17  \\
+		\hline  
+	\end{tabular}
+\end{table}
+
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\linewidth]{Figures/rq2-topk.pdf}
+	\caption{Comparison of the performance of tree kernels, TF-IDF, and CodeBERT in detecting different clone types. The x-axis and y-axis represent clone types and metric performance respectively}
+	\label{fig:type-plot}
+\end{figure}
+
+
+Across all kernels, the results show a consistent trend showing that the performance is highest for Type-1 clones and drops substantially for Type-2 and Type-3 clones. For Type-1, PTK, and SSTK achieve very strong MRR and MAP values, indicating that the identical AST structure of Type-1 clones provides an ideal setting for tree-based similarity
+As shown in Table~\ref{tab:rq2-metrics}, tree kernels outperform both TF-IDF and CodeBERT in this setting, achieving highest Prec@5 of $0.60$, MRR of $0.97$, and a MAP@100 of $0.95$. 
+Notably, CodeBERT performs comparably in this setting, with performance close to that of tree kernels, suggesting that pre-trained code representations can capture near-identical syntactic patterns. 
+In contrast, TF-IDF attains lower performance (Prec@5 $=0.52$, MRR $=0.43$, MAP@100 $=0.83$), as it relies solely on lexical overlap and ignores syntactic ordering and hierarchy information. This structural information, which is fully preserved in Type-1 clones, provides tree kernels with a stronger ranking signals than bag-of-words representations.
+On Type-2 clones that involve minor syntactic edits such as identifier renaming, the retrieval becomes noticeably more difficult across all approaches.
+Nevertheless, tree kernels consistently outperform the baselines on all metrics. In particular, STK achieves the highest Prec@5 ($0.29$), MRR ($0.69$), and MAP ($0.63$), corresponding to improvements of 31.8\% in Prec@5, 57.1\% in Prec@10, 30.2\% in MRR, and 34\% in MAP over TF-IDF. In this setting, comparable or larger gains are also observed relative to CodeBERT.These results indicate that tree kernels are more robust to lexical variation than token-based and embedding-based methods. Type-2 clones preserve the underlying syntactic structure, tree kernels can exploit structural alignment between abstract syntax trees, obtaining high similarity scores despite identifier changes. In contrast, TF-IDF is affected by token mismatches, and while embedding models partially abstract lexical differences but they do not explicitly model structural correspondence, limiting their effectiveness in this setting.
+
+
+Performance becomes more varied on Type-3 clones, which allow more substantial edits such as added or reordered statements, making them considerably harder to detect. PTK achieves the best precision (Prec@5 of $0.32$ and Prec@10 of $0.28$) and the highest MAP ($0.27$), while PTK and STK attain the highest MRR ($0.47$) All tree kernels show a decline in MRR and MAP compared to Type-2 clones, with SSTK experiencing the largest drop. This drop reflects the limitation of tree kernels when edits disrupt subtree boundaries or alter the syntactic arrangement of control constructs, thereby reducing structural overlap. The TF-IDF baseline, although weaker than PTK and STK, matches the performance of SSTK. 
+Surprisingly, the pre-trained CodeBERT model performs worst in terms of MRR ($0.26$) and MAP ($0.17$) on Type-3 clones, indicating that its embedding-based similarity is less effective than the other approaches under substantial syntactic variation in our experimental setting.
+
+In summary, tree kernels demonstrate strong performance, surpassing the baselines across all metrics and types. Among the three variants, PTK emerges as the most effective for Type-1 and Type-3 clones, likely due to its ability to capture partial hierarchical structures within code. STK, on the other hand, performs best on Type-2 clones. The token based TF-IDF approach performs competitively on Type-1 and Type-2 clones due to shared tokens in exact or near-exact clones but its overall ranking on Type-3 clones declined (MAP$=0.17$) because lexical overlap decreases.
+As for CodeBERT, it does not stand out in our evaluation, likely because the dataset does not contain purely semantic clones. Prior work~\cite{pinku2024use} suggests that the assumption that Type-3 clones are primarily semantic may not fully hold in practice. In fact, the clone pairs in BigCloneBench are largely based on structural similarity rather than purely semantic fragments i.e., code fragments that are structurally very different but functionally equivalent. Consequently, performance on Type-3 clones still depends heavily on the extent to which syntactic structure is preserved, rather than on semantic similarity alone, which helps explain the results we observed.
+
+
+
+
+%This reinforces that while TF-IDF may be sufficient for identifying simpler, syntactically similar clones, structure-aware approaches are better suited for capturing nuanced similarities. 
+
+%%The assumption that T3 clones are semantic and not structural might be incorrect. According to this paper "On the Use of Deep Learning Models for Semantic Clone Detection" -- Bigclonebench dataset consists of clone and non-clone pairs based on structural similarity, and it does not provide any code pairs that are entirely semantic clones, i.e., structurally very different but functionally similar.
+%% To Add later: Typewise evaluation is used to compare retrieval models under fixed clone-type conditions. Absolute metric values are not compared across clone types, as they are influenced by ground truth size and ambiguity. Instead, relative model rankings within each clone type provide insight into model strengths and weaknesses.
+
+\subsection{RQ3. Performance on code fragments of different complexity}
+\paragraph{\textit{Approach}} To evaluate how each tree kernel handles AST variability, we first define criteria to categorize functions in our dataset. Functions are classified based on their length in lines of code (LOC) and McCabe's cyclomatic complexity~\cite{mccabe1976complexity}. For each criterion, we create two disjoint sets, resulting in a total of four subsets. For LOC, one set includes functions with fewer than $6$ LOC, while another set contains functions with more than $10$ LOC. These thresholds align with common software engineering heuristics, where smaller functions are generally simpler and easier to analyze, while larger functions tend to have more intricate control flow and nesting. 
+
+Similarly, we measure McCabe's cyclomatic complexity (MCC) of code fragments using Checkstyle\footnote{https://github.com/checkstyle/checkstyle}, which sets a default threshold of $10$ as a maintainability guideline. Functions with a cyclomatic complexity exceeding this threshold are considered complex. This aligns with McCabe's 1976 paper~\cite{mccabe1976complexity}, which suggests that code fragments with a complexity between $3$ and $7$ are well-structured, while $10$ serves as a reasonable upper limit.
+Based on this, we create two sets: one containing ASTs with a complexity of less than $10$ and another with ASTs having a complexity of $10$ or higher. We then sample functions from these sets for further analysis and conduct four different experiments--small size, large size, low complexity, and high complexity--for each tree kernel.
+
+We then sample functions from these sets for further analysis and conduct four distinct experiments for each tree kernel, evaluating retrieval performance across different function characteristics: (1) small-size functions (fewer than 6 LOC), (2) large-size functions (more than 10 LOC), (3) low-complexity functions (cyclomatic complexity less than 10), and (4) high-complexity functions (cyclomatic complexity of 10 or higher). 
+By comparing performance metrics such as Prec@k, MRR, and MAP across these subsets, we assess how function size and complexity influences the effectiveness of different tree kernels in retrieving relevant AST structures.
+
+\subsubsection{RQ3 Findings}
+Figure~\ref{fig:rq3-size-plot} presents the results of tree kernel performance on functions of varying sizes and compares it with TF-IDF and CodeBERT. 
+Overall, all approaches achieve higher performance on small-size functions than on large-size functions. On small functions, PTK achieves the best performance among the tree kernels, with mean scores of $0.89$, $0.87$, $0.94$, and $0.70$ for Prec@5, Prec@10, MRR, and MAP@100, respectively. STK and SSTK follow closely, both achieving similarly strong results across all metrics (see Table~\ref{table:rq3-size}).
+	
+A noticeable decline in performance was observed for large-size functions across all tree kernels. For STK, the mean Prec@5, Prec@10, MRR, and MAP@100 drop to $0.67$, $0.62$, $0.83$, and $0.32$, respectively, while PTK and SSTK exhibit even larger reductions. This degradation is expected, as larger functions produce deeper and more complex trees, which increases structural variability and reduces meaningful subtree overlap.
+
+
+
+\begin{table}[h!]
+	\centering
+	\caption{Comparison of mean tree kernel performance over 10 repetitions of the experiment for small ($<6$ LOC) and large ($>10$ LOC) functions. Highest values are indicated in bold.}
+	\label{table:rq3-size}
+	\begin{tabular}{l|cc|cc|cc|cc}
+		\toprule
+		\textbf{Kernel} & \multicolumn{2}{c}{\textbf{Prec@5}} & \multicolumn{2}{c}{\textbf{Prec@10}} & \multicolumn{2}{c}{\textbf{MRR}} & \multicolumn{2}{c}{\textbf{MAP@100}} \\
+		\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
+		& Small & Large & Small & Large & Small & Large & Small & Large \\
+		\midrule
+		
+		STK    & 0.87 & \textbf{0.67} & 0.86 & \textbf{0.62} & \textbf{0.94} & \textbf{0.83} & 0.69 & 0.32 \\
+		PTK    & \textbf{0.89} & 0.62 & \textbf{0.87} & 0.56 & \textbf{0.94} & 0.79 & \textbf{0.70} & 0.25 \\
+		SSTK   & 0.88 & 0.58 & 0.86 & 0.53 & \textbf{0.94} & 0.74 & \textbf{0.70} & 0.25\\
+		TF-IDF & 0.75 & \textbf{0.67} & 0.74 & \textbf{0.62} & 0.84 & \textbf{0.83} & 0.59 & \textbf{0.35}\\
+		CodeBERT & 0.75 & 0.42 & 0.76 & 0.39 & 0.72 & 0.45 & 0.53 & 0.13  \\	
+		
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+In comparison, while the TF-IDF baseline has a lower performance than tree kernels on small-size functions, its performance is less impacted by an increase in function size.
+On large-size functions, TF-IDF maintains a Prec@5 and Prec@10 of $0.67$ and $0.62$, respectively, and achieves the highest MAP@100 of $0.35$. Although TF-IDF does not outperform tree kernels at the very top ranks on small functions, its top-K precision on large functions remains competitive, and its higher MAP@100 indicates more stable ranking quality as function size increases.
+
+
+CodeBERT shows lower performance than the tree kernels on both small-size and large-size functions and exhibits a sharper decline as function size increases. Its Prec@5 drops from $0.75$ on small functions to $0.42$ on large functions, and its MRR is consistently lower than all other approaches. 
+Moreover, CodeBERT attains a substantially lower MAP@100 ($0.13$), indicating poor ranking consistency, with relevant results frequently appearing far down the ranked list. This suggests that CodeBERT is less robust to increasing function length, often failing to rank correct results near the top for large functions.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\linewidth]{Figures/rq3-LOC-plot-kelp-tfidf-codebert}
+	\caption{Comparison of tree kernel performance with baselines on the basis of function sizes.}
+	\label{fig:rq3-size-plot}
+\end{figure}
+
+
+
+Table~\ref{table:rq3-complexity} highlights the impact of cyclomatic complexity on retrieval performance.
+Across all tree kernels, functions with lower cyclomatic complexity ($<10$ MCC) achieve substantially better performance than high-complexity functions ($>10$ MCC).
+Among the tree kernels, STK performs best on low-complexity functions, obtaining a Prec@5 of $0.72$, Prec@10 of $0.69$, MRR of $0.86$, and MAP@100 of $0.41$, with PTK and SSTK following closely. The baseline approaches trail the tree kernels in this setting, with TF-IDF attaining a Prec@5 of $0.65$, MRR of $0.79$, and MAP@100 of $0.36$.
+
+The box plots in Figure~\ref{fig:rq3-complexity-plot-kelp-vs-tfidf-vs-codebert} show that there is a large gap in the performance of tree kernels when complexity changes from low to high. The High complexity functions have intricate control flow and therefore larger more complex trees leading to lower median values for all metrics. A similar pattern can be observed for CodeBERT (see Table~\ref{table:rq3-complexity}). In contrast, the TF-IDF baseline experiences a smaller decline in Prec@5 (6\% for Prec@5 and only 1.3\% for MRR), while leading in performance across all metrics for High complexity functions, underscoring its robustness across different code complexities.
+
+The box plots in Figure~\ref{fig:rq3-complexity-plot-kelp-vs-tfidf-vs-codebert} further highlight the substantial performance gap for tree kernels when moving from low to high-complexity functions. High-complexity functions typically exhibit intricate control flow, resulting in deeper and more variable ASTs, which leads to pronounced drops in median performance across all metrics for STK, PTK, and SSTK. A similar degradation trend is observed for CodeBERT (Table~\ref{table:rq3-complexity}). In contrast, TF-IDF exhibits a noticeably smaller decline, with only a 6\% reduction in Prec@5 and a 1.3\% reduction in MRR, and achieves the highest scores across all metrics on high-complexity functions. This behavior is expected, as TF-IDF is largely indifferent to structural complexity, relying on lexical overlap rather than syntactic or control-flow structure.
+
+\begin{table}[h!]
+	\centering
+	\caption{Comparison of median tree kernel performance over 10 repetitions of the experiment for low ($<10$ MCC) and high ($>10$ MCC) complexity ASTs. Highest values are indicated in bold.} 
+	\label{table:rq3-complexity}
+	\begin{tabular}{l|cc|cc|cc|cc}
+		\toprule
+		\textbf{Kernel} & \multicolumn{2}{c}{\textbf{Prec@5}} & \multicolumn{2}{c}{\textbf{Prec@10}} & \multicolumn{2}{c}{\textbf{MRR}} & \multicolumn{2}{c}{\textbf{MAP@100}} \\
+		\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
+		& Low & High & Low & High & Low & High & Low & High \\
+		\midrule
+	STK & \textbf{0.72}&  0.54 & \textbf{0.69} & 0.48& \textbf{0.86} & 0.72 & \textbf{0.41} & 0.21\\
+	PTK &         0.68 &  0.47 &  		 0.63  & 0.40& 0.84 & 0.67 & 0.35 & 0.16 \\
+	SSTK&         0.67 &  0.42 & 		 0.62  & 0.37& 0.79 & 0.58 & 0.35 & 0.17\\
+  TF-IDF&         0.65 & \textbf{0.61}&  0.60 & \textbf{0.55}& 0.79 & \textbf{0.78}& 0.36 & \textbf{0.28}\\
+	CodeBERT  & 0.48 & 0.36 &   0.46  & 0.32 &  0.47  & 0.43 &  0.18 & 0.12\\
+		
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\linewidth]{Figures/rq3-complexity-plot-kelp-tfidf-codebert}
+	\caption{Comparison of tree kernel performance with baselines on the basis of AST complexity.}
+	\label{fig:rq3-complexity-plot-kelp-vs-tfidf-vs-codebert}
+\end{figure}
+
+
+
+The consistent performance degradation of tree kernels on high-complexity functions suggests that their reliance on structural matching becomes less effective as AST depth and variability increase, whereas TF-IDF's token-based similarity remains more stable. 
+Overall, while tree kernels are highly effective for low-complexity functions, TF-IDF demonstrates more consistent performance across varying levels of code complexity. The strong performance of tree kernels on small, low-complexity functions indicates their suitability for tasks involving limited structural changes, such as small bug fixes, localized code modifications or bug repairs. However, their reduced effectiveness on more complex functions, relative to TF-IDF, suggests limitations in handling increased structural variability and depth, motivating future work on complexity-aware kernel adaptations or hybrid approaches.
+
+
+\subsection{RQ4. Performance of Hybrid model} 
+\paragraph{\textit{Approach}} In this research question, we compare the retrieval performance and run time of two methods: 1) a purely tree kernel-based method (from RQ1), 2) a hybrid model that applies TF-IDF for candidate retrieval followed by tree kernel based re-ranking. We begin by retrieving the top $100$ textual matches of a query fragment using \textit{More Like This} (MLT) query in Elasticsearch\footnote{https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html}. The MLT query selects the top K terms with the highest TF-IDF scores from the input document. These terms are then used to construct a query, helping retrieve similar documents based on term importance. Retrieving top documents for re-ranking reduces the search space from the entire dataset to a smaller set of candidates, significantly cutting down the number of tree kernel comparisons.
+
+Next, we re-rank the retrieved candidates based on structural similarity by computing their pairwise tree kernel similarity with the query fragment. By limiting the expensive $O(n^2)$ tree kernel computation to only $100$ candidates, we limit total comparisons while maintaining the retrieval accuracy of the pure tree kernel model. We repeat the experiment $10$ times and compare the run time and performance (Prec@K, MRR, and MAP) of the token-based model, tree kernel model, and the hybrid model.
+
+
+\subsubsection{RQ4 Findings}
+In this section, we present the results of our hybrid model (PTK-Hybrid, STK-Hybrid, and SSTK-Hybrid) which utilizes TF-IDF for initial retrieval followed by re-ranking the retrieved results based on tree kernel similarity. Figure~\ref{fig:rq4-topk} presents a performance comparison between the hybrid model and the original/pure tree kernel model (PTK, STK, SSTK) across Prec@5, Prec@10, MRR, and MAP metrics.
+
+The STK-Hybrid model achieves performance comparable to the pure STK model across all metrics, whereas, PTK-Hybrid and SSTK-Hybrid slightly outperform their corresponding pure models (Table~\ref{table:rq4}), indicating that restricting tree kernel computation to a high-quality candidate set does not harm or may even improve ranking effectiveness. In contrast, the pure tree kernel models incur substantial computational cost, requiring between 5,775 and 7,071 seconds due to exhaustive pairwise comparisons. The hybrid models dramatically reduce this cost while maintaining retrieval quality. 
+
+By leveraging fast token-based retrieval followed by structure aware re-ranking, the hybrid approach reduces the number of tree kernel comparisons required per query. This results in mean runtime reductions of 94.4\% (STK), 96.1\% (PTK), and 97.6\% (SSTK) relative to the pure tree kernel models. While TF-IDF alone is the fastest approach (68 seconds), it yields lower performance, confirming that the hybrid model provides a better balance between efficiency and accuracy.
+
+We conducted six pairwise Wilcoxon signed-rank tests to evaluate whether the performance differences between the original tree kernel models and their hybrid variants, and between the hybrid models and TF-IDF, were statistically significant. To account for multiple comparisons, we applied the Bonferroni correction and used $\alpha = 0.05/6 = 0.0083$ for significance. The results indicate that the small performance 
+improvements shown in Table~\ref{table:rq4} for the PTK-Hybrid and SSTK-Hybrid are statistically significant for most metrics, with the exception of MRR for PTK-Hybrid and MAP for SSTK-Hybrid. In contrast, STK-Hybrid shows no statistically significant differences relative to STK across all metrics. Importantly, none of the hybrid models exhibit a consistent degradation in performance. Across all metrics, the hybrid models significantly outperform TF-IDF, confirming that combining fast token-based retrieval with tree kernel re-ranking preserves or improves retrieval effectiveness while substantially reducing computational cost.
+
+Together, these results highlight that tree kernels provide an explicit and effective mechanism for modeling code structure and achieve better retrieval performance than the baselines, but their high run time limits feasibility in many software engineering scenarios.  However, this limitation can be mitigated by employing a  hybrid retrieval model, which significantly reduces time complexity while maintaining strong ranking quality.
+
+\begin{table}
+	\centering
+	\caption{Prec@5, Prec@10, MRR, and MAP from 10 experimental runs of Hybrid model compared against a pure tree kernel model and the TF-IDF model}
+	
+	\label{table:rq4}
+	\begin{tabular}{l||r|r|r|r||r}
+		\toprule
+		\textbf{Technique} & \textbf{Prec@5} & \textbf{Prec@10} & \textbf{MRR} & \textbf{MAP@100} & \textbf{Time (secs)}\\ 
+		\midrule
+
+		%	\cmidrule(lr){1-1}\cmidrule(lr){2-5}\cmidrule(lr){6-6}
+		
+		PTK Hybrid  &	     0.70       &  		  0.65    & 		0.84   &         0.37 &   394     \\
+		STK Hybrid  &\textbf{0.72}      & \textbf{0.67}   & \textbf{0.85}  &         0.37 &   223      \\
+		SSTK Hybrid &	     0.70       &  		  0.66   & 		0.82   &         0.37 &   156      \\
+		\midrule
+		PTK         &        0.68       &  		  0.62 	  &         0.82   &         0.33 & 7,071  \\ %topk
+		STK         &        0.71		& \textbf{0.67}   & \textbf{0.85}  & \textbf{0.38}& 5,775  \\ %topk
+		SSTK  	    &        0.64       & 		  0.60    &         0.78   &         0.33 & 6,558  \\ %topk
+		\midrule
+		TF-IDF	    &   	0.66       	&         0.61    &         0.79   &         0.35 & 68 \\ 
+		%CodeBERT    &  		0.49        &         0.46    &         0.50   &         0.18 & \textbf{17,620} \\ 
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\linewidth]{Figures/RQ4-topk}
+	\caption{Comparison of the performance of Hybrid and Original (pure tree kernel based) models. The y-axis represents metric performance.}
+	\label{fig:rq4-topk}
+\end{figure}
+
+
+
+
+\section{Discussion}
+\label{lab:discussion}
+whisper 
+In this paper, we investigate the use of tree kernels for source code retrieval, evaluating three specific tree kernels: STK, PTK, and, SSTK. We formulate the task as a ranked retrieval problem where a query method is used to rank candidate methods such that true clones appear near the top of the list. This setup closely reflects a realistic code search scenarios and motivates our use of ranking-based metrics such as Prec@k, MRR, and MAP,
+which evaluate the quality of ordered retrieval results rather than threshold dependent binary decisions.
+
+%%By evaluating multiple tree kernels and running repeated experiments, we aim to provide a thorough assessment of the effectiveness of tree kernels in retrieving similar code.
+
+While we believe that evaluating tree kernels in a supervised setup, where they operate as pairwise similarity functions within an SVM could have revealed even better results, we intentionally focus on an unsupervised retrieval scenario. Our goal is to examine
+whether tree kernels are useful as standalone similarity measures for code-to-code search where relevance is defined through top-k ranking.
+Consequently, our findings speak specifically of the retrieval setting: tree kernels appear effective for clone retrieval, even though classifier-based approaches may exploit them more fully. Exploring supervised learning approaches therefore remains an interesting direction for future work, but is beyond the scope of this study.
+
+
+Across RQ1 and RQ2, tree kernels generally outperform TF-IDF and CodeBERT when evaluating syntactically similar code fragments, demonstrating their ability to retrieve and rank relevant results near the top. However, this advantage diminishes as functions grow larger or more complex. In these cases, TF-IDF stands out for its consistent performance across varying function sizes and complexity levels. Despite lacking any structural awareness, TF-IDF remains a reliable and lightweight retrieval method, reinforcing its value as a strong practical baseline.
+
+
+%In RQ2, we explore the ability of tree kernels to distinguish between different levels of syntactic complexity in source code. While structural complexity remains a challenge, and performance variations across techniques reflect their differing sensitivities to syntactic modifications, tree kernels by outperforming the TF-IDF baseline on Type-3 clone (which require deeper structural understanding) show some  promise in capturing syntactic similarities. 
+
+CodeBERT represents the embedding-based approach in our evaluation. Without task-specific fine-tuning, it performs worse than tree kernels and does not emerge as a superior alternative in any of the experiments. Its relatively low precision suggests that generic pre-trained embeddings may not be sufficient for fine-grained code retrieval, although performance could improve with retrieval-specific training.
+
+
+
+The clone-type analysis in RQ2 further highlights the strengths and limitations of tree kernels. While they outperform the baselines across all clone types, performance drops for clones involving substantial edits, such as added, removed, or reordered statements. Among the kernels, PTK stands out in this setting due to its ability to match partial subtrees, allowing it to capture fine-grained syntactic fragments even when the overall structure has diverged. In contrast, STK, despite strong overall performance, suffers when exact subtree alignment is broken due to such modifications.
+
+
+At the same time, this structural sensitivity exposes a key limitation of tree kernels. They primarily model syntactic structure as encoded in the AST, such as nesting patterns, control constructs, and block organization, while largely ignoring deeper semantic relationships like control flow and data flow. As a result, tree kernels often capture the wrong level of structure for semantic similarity, which limits their effectiveness on behaviorally diverse Type-3 clones.
+
+
+
+%Results from RQ3 also show that function size and complexity strongly influence tree kernel performance. Tree kernels perform best on smaller and simpler ASTs, where exact or partial subtree matches are easier to identify. STK is particularly effective for small bug fixes or localized edits due to its reliance on exact subtree matches, while PTK handles moderately complex structures more flexibly. All kernel variants struggle as ASTs become larger and deeper, where extensive branching reduces effective matching. This limitation may partly stem from KeLP library, which may not be optimized for large or highly branched inputs.
+
+Results from RQ3 further show that function size and structural complexity strongly influence tree kernel performance. Tree kernels perform best on smaller and simpler ASTs, where exact or partial subtree matches are easier to identify. In particular, STK exhibits the strongest performance on simple code fragments. This behavior is consistent with its design: STK counts exact subtrees as features, making it especially effective when entire subtrees are shared between code fragments, such as in small bug fixes or single-line edits. In simpler ASTs, where subtree alignment is more likely, STK captures structural similarity very effectively, leading to higher retrieval performance.
+
+In contrast, PTK allows partial matches between subtrees, which provides greater flexibility when structure diverges. This makes PTK better suited for moderately complex or larger code fragments, where exact subtree alignment is less common. PTK is therefore more effective at capturing variations in nesting depth or branching structure, which frequently arise during refactorings or more extensive edits.
+
+Despite these strengths, all tree kernel variants struggle as ASTs grow larger and deeper. Extensive branching and increased structural variation reduce the likelihood of meaningful subtree matches, limiting retrieval effectiveness. This limitation may partly stem from KeLP implementation, which may not be optimized for large or highly branched inputs.
+
+% STK exhibits the strongest performance on simple code fragments. This is likely due to the way each tree kernel handles different tree structures. For instance, STK counts exact subtrees as features, making it effective for scenarios where entire subtrees are shared between code fragments, such as small bug fixes or single-line code changes. In simpler ASTs, where these subtrees are more likely to align, STK captures the structural similarities effectively, leading to higher performance. PTK, on the other hand, allows partial matches between subtrees. This characteristic provides greater flexibility and makes PTK better suited for more complex or larger tree structures. It performs well in detecting variations in nesting, or deeper branching, which are common in refactorings.
+
+
+%These findings suggest that while tree kernels excel at capturing partial structural overlaps, they are limited when handling more complex, deep ASTs. 
+
+Finally, the hybrid retrieval model evaluated in RQ4 demonstrates a practical way forward. By combining TF-IDF for fast initial retrieval with tree kernel re-ranking, we reduce computation time by up to 97\% while preserving strong retrieval performance. This hybrid approach balances scalability and accuracy, and is particularly well-suited for scenarios such as bug fixing or small code edits, where top-ranked precision is critical.
+
+
+In summary, our study highlights both the strengths and limitations of tree kernels for source code retrieval. Tree kernels excel at capturing fine-grained structural similarities and can improve top-ranked retrieval quality, but their high computational cost and sensitivity to code size limit their standalone practicality. Hybrid approaches that integrate fast lexical retrieval with structure-aware re-ranking offer a promising and scalable direction for applying tree kernels in real-world software engineering tasks.
+
+
+%It is important to emphasize that, although our evaluation uses a clone detection dataset, our objective is not to propose a new clone detector. Rather, we aim to empirically assess the usefulness of tree kernels for code retrieval and understand how they compare to established approaches. In this sense, tree kernels can be viewed as a complementary technique, offering insight into fine-grained structural similarities that may be overlooked by purely lexical methods.
+
+
+\section{Limitations and Future Work}
+\label{lab:limitations}
+
+\paragraph{Construct Validity}
+One limitation of our study is the use of fixed thresholds when categorizing ASTs by complexity. This choice inevitably simplifies the range of structural variation that appears in real code or could be present in our dataset. In RQ3, we also used LOC and McCabe's complexity independently, which captures different aspects of complexity but may miss interactions between them. Future work could look into combining richer static complexity measures with properties such as tree height to get a more complete picture of structural difficulty and its impact on tree kernel performance.
+
+Another source of construct-related bias is our use of CodeBERT without any task-specific fine-tuning. Since embedding models often benefit from such fine-tuning~\cite{arshad2022codebert} the results we report likely understate what a tuned model could achieve on clone detection or code similarity tasks. Fine-tuning on clone datasets might improve both precision and ranking performance, especially for hard to detect Type-3 clones.
+
+\paragraph{Internal Validity} Tree kernel computations are expensive, requiring 
+$O(n^{2})$ pairwise kernel evaluations for full retrieval. Because of this, we limited our experiments to samples of $100$ code fragments. This was mainly a practical choice, but it does mean that our results reflect behavior on sampled subsets rather than the entire dataset. To reduce the impact of sampling bias, we repeated all experiments using ten different samples, each with $100$ distinct queries. This helped stabilize the results and reduced the chance that any single sample dominated the findings.
+
+It is also possible that the specific fragments included in each sample naturally favored one method over another. For instance, samples containing many syntactic or near-miss clones (Type-1 pr Type-2) may give TF-IDF an advantage, while samples dominated by more heavily edited Type-3 clones tend to favor embedding models such as CodeBERT, which are more resilient to structural variation. 
+Tree kernel methods may only perform well on Type-3 clones when substantial parts of the structure remain intact. As such, the distribution of clone types within the dataset can influence the observed performance, and future evaluations should take this into account more explicitly.
+
+\paragraph{External Validity} Our reliance on the BigCloneBench has its own limitations. Prior studies~\cite{krinke2022bigclonebench} have reported issues such as unlabeled true clones, inconsistent or incomplete snippets, and occasional mistakes in the ground-truth labels. These factors can introduce noise into retrieval metrics. In addition, BigCloneBench consists entirely of Java code, which naturally limits the generalization of results.
+
+ASTs also vary noticeably across languages. Differences in grammar, syntax style, typing, idioms, and parser design all influence the structure of the generated trees. This means tree kernel methods may behave quite differently in other languages, so our Java-only results should be interpreted with that caveat in mind.
+
+%%This dataset consists of clone and non-clone pairs based on structural similarity, and it does not provide any code pairs that are entirely semantic clones, i.e., structurally very different but functionally similar. Moreover, the definition of semantic clones is ambiguous and often debated in literature as it revolves around syntactic similarity [30], [36], [37]. Thus, evaluating semantic clone detection models on BigCloneBench (originally created for measuring recall [30]) may result in misleading evaluation.
+
+%%We can explore other potential applications of tree kernels in SE, program repair/transformation, code translation, bug fixing like clever?
+
+
+\section{Conclusion}
+\label{lab:conclusion}
+
+This paper investigates the potential of tree kernels as a structure-aware alternative for analyzing source code in Software Engineering. Rather than positioning tree kernels as a solution to known shortcomings of existing work, our aim is to revisit a theoretically well-founded but largely overlooked family of methods and examine how they behave in a typical code search and retrieval setting. We empirically evaluate three well-known kernels--STK, PTK, and SSTK--and compare their performance with strong token-based and embedding-based baselines, namely TF-IDF, and CodeBERT. 
+
+
+Our results show that tree kernels are able to capture useful syntactic structure and retrieve structurally similar code more effectively than lexical and embedding-based baselines in several settings, particularly when structural similarity is preserved. At the same time, their main limitation lies in computational cost and reduced robustness as code size and complexity increase. We further demonstrate that this overhead can be substantially reduced through hybrid retrieval strategies, without sacrificing retrieval effectiveness at the top ranks.
+
+
+In conclusion, our study highlights the trade-offs between structural sensitivity, retrieval performance, and computational efficiency in clone search and code retrieval. From a practical perspective, hybrid approaches appear especially promising, combining the efficiency of lightweight methods such as TF-IDF with the structural awareness of tree kernels. Future work may explore more efficient kernel variants, pruning or approximation strategies, and complexity-aware formulations that improve scalability. In addition, more selective hybrid retrieval pipelines, where structural similarity is applied only when needed, may offer an effective middle ground. Finally, evaluating these techniques on larger and better-curated datasets would help clarify where deterministic tree kernels can provide the greatest value in Software Engineering tasks.
+
+\end{document}
+

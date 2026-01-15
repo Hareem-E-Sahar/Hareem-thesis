@@ -4,19 +4,28 @@
 \providecommand{\main}{..}
 \documentclass[\main/thesis.tex]{subfiles}
 
-\onlyinsubfile{\zexternaldocument*{\main/tex/introduction}}
+%\onlyinsubfile{\zexternaldocument*{\main/tex/introduction}}
 
 \begin{document}
 
 \chapter{Conclusion}
+\label{chp:conclusion}
 
-Referring back to the introduction (Section \ref{sec:crossRef}), we see
+\section{Limitations and Future Work}
+Tree kernels can be used for program repair. %(see /home/hareem/ThinkpadP14/UofA2023/Tree_Kernel2024/NotesWinter2024.md)
+%Parse tree kernels have been successfully used in natural language processing (NLP). However, the parse tree kernel used in NLP does not perform well for program source code due to two issues. The first issue is the asymmetric influence of node changes. In previous tree kernels, changes near a root node have larger influence than changes near leaf nodes. When the tree depth is small, this effect is not serious. However, the parse trees of program sources are much larger than that of natural language sentences, and this unwanted influence greatly affects tree comparison. The second issue is the sequence of subtrees. Previous tree kernels count sequence of subtrees. Unlike natural language sentences, the sequence of two substructures (like the order of two methods in a Java class) has little information in program source codes. We identified these two issues, and propose a new parse tree kernel for program source code.
+
+
+%When processing ASTs structures, we usually face a problem of high-dimensional data. The size of an AST increases more than linearly when the program size is larger. In the experimental dataset, the largest AST contains 7027 nodes, while the program has only 343 lines of code including comments and blank lines. High-dimensional data not only lead to waste of time and memory but also aﬀect the performance of algorithms. Thus, dimension reduction is an essential task for the AST-based approach.
+
+
+
+Referring back to the introduction (Section \ref{sec:motivation}), we see
 that cross-references between files are correctly handled when the files
 are compiled separately, and when the main document is compiled.
 When the main document is compiled, cross-references are hyperlinked.
 The values of the cross-references will change between the two compilation
 scenarios, however. (Each chapter, compiled on its own, becomes ``Chapter 1''.)
-
 \begin{note}[Caution:]
 For cross-references to work, when files are compiled separately,
 the referenced file must be compiled at least once before the

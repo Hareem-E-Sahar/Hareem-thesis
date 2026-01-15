@@ -1,0 +1,74 @@
+% A workaround to allow relative paths in included subfiles
+% that are to be compiled separately
+% See https://tex.stackexchange.com/questions/153312/subfiles-inside-a-subfile-using-relative-paths
+\providecommand{\main}{..}
+\documentclass[\main/thesis.tex]{subfiles}
+
+%\onlyinsubfile{\zexternaldocument*{\main/tex/introduction}}
+
+\begin{document}
+
+\chapter{Discussion}
+\label{chp:discussion}
+%Todo :
+%Add some trees, show common subtrees and motivate that tree kernels are explainable ?\\
+%Read "Automatically classifying source code using tree-based approaches".
+%~/UofA2025/Literature_Review/Trees_ASTs_and_Graphs/Automatically classifying source code using tree-based approaches
+%Read all old notes and find out what discussions were done and include those.
+\section{How these studies are connected}
+How these contributions pave the way for the adoption of SDP in practice?
+What did we learn from the conclusion stability paper. We can't repeatedly re-train. Design simpler approaches. Incrementally update models. Explainable models.
+Incorporate structure.
+
+\section{SDP as a field has not kept up with the development pace of SE where LLMs have taken over}
+Do LLMs make SDP irrelevant
+
+The whole SDP is questionable and its something that needs to be re-evaluated. We need to establish strong datasets, better baselines, and evaluation criteria.
+
+The need of code is increased. Clankers are producing code at a very fast rate so the need to code review has increased as well. Also, people care about the riskiness of commits. Due to these reasons the need of SDP models is high but SDP's effectiveness has not improved. With the amount of code we are producing that needs review, the slow models are very useful.
+
+%LLMs have reasoning ability so we can produce reasonable estimates of code coming in.
+
+\subsection{The problem of SDP datasets} 
+\textcolor{blue} Abram said that's not very relevant
+
+Only defects that get noticed make it to the issue tracker. 
+SZZ does not do great at labeling 
+The repair datasets might give a perspective.
+Daniel Alencar da Costa's survey has some great pointers on which studies offer explainability.
+
+\section{Comparison of embeddings and tree kernels}
+%advantages disadvantages.
+tree kernels do not need a lot of memory ? I wish
+vs embeddings which do.
+However, embeddings are quite fast once loaded.
+
+\section{Lessons from IRJIT}
+
+%Did we use the right metrics to evaluate IRJIT}
+\subsection{Shortcomings of IRJIT}
+
+We did not evaluate its usefulness with real developers.
+It produces many FPs.
+code frequencies do not care about code semantics. IRJIT overlooks token semantics e.g. it does not understand that for is similar to while.
+
+\subsection{How to extend the explainability of IRJIT}
+There is no way to measure explainability.
+
+
+Providing line-level, interpretable defect predictions increases practical usefulness and improve developer trust.
+
+Fine-grained line-level prediction improves the model explainability without sacrificing performance.
+
+\section{Lessons from Tree Kernels}
+
+\subsection{Why did tree kernels not perform as expected}
+\subsection{Tree kernels should be evaluated in a supervised manner.}
+Tree kernels can be used for program repair.
+ %(see /home/hareem/ThinkpadP14/UofA2023/Tree_Kernel2024/NotesWinter2024.md)
+%Parse tree kernels have been successfully used in natural language processing (NLP). However, the parse tree kernel used in NLP does not perform well for program source code due to two issues. The first issue is the asymmetric influence of node changes. In previous tree kernels, changes near a root node have larger influence than changes near leaf nodes. When the tree depth is small, this effect is not serious. However, the parse trees of program sources are much larger than that of natural language sentences, and this unwanted influence greatly affects tree comparison. The second issue is the sequence of subtrees. Previous tree kernels count sequence of subtrees. Unlike natural language sentences, the sequence of two substructures (like the order of two methods in a Java class) has little information in program source codes. We identified these two issues, and propose a new parse tree kernel for program source code.
+
+
+%When processing ASTs structures, we usually face a problem of high-dimensional data. The size of an AST increases more than linearly when the program size is larger. In the experimental dataset, the largest AST contains 7027 nodes, while the program has only 343 lines of code including comments and blank lines. High-dimensional data not only lead to waste of time and memory but also aﬀect the performance of algorithms. Thus, dimension reduction is an essential task for the AST-based approach.
+
+\end{document}

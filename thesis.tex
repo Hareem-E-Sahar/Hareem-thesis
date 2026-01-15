@@ -36,8 +36,8 @@
 \usepackage{csquotes} % Also used with biblatex
 \usepackage{xmpincl} % Seems to be needed when converting to PDF/A, 
                      % particularly on Macs
-%
-%
+
+
 % \usepackage{mathptmx}      % use Times fonts if available on your TeX system
 %
 % insert here the call for the packages your document requires
@@ -51,6 +51,13 @@
 % \journalname{myjournal}
 %
 
+
+%for tree kernels
+%\usepackage{subfigure} 
+\usepackage{forest}
+\usepackage{listings}
+\input{\main/tex/listing-setup.tex}  
+
 \usepackage{graphicx}
 \usepackage{array}
 \usepackage{pifont}
@@ -58,8 +65,9 @@
 %\usepackage{natbib} %Package biblatex Error: Incompatible package 'natbib'.
 %\usepackage{subcaption} % For subfigures  % this conflicts with subfig package
 \usepackage[caption=false]{subfig} %for subfloat
+%\usepackage{subfigure}
 
-
+\usepackage{xcolor}
 \usepackage{booktabs}
 \usepackage{tikz}
 \usepackage{soul}
@@ -160,12 +168,14 @@ mincitenames=1,maxcitenames=2%
 \renewcommand{\contentsname}{Table of Contents}
 
 % Fill in the following
-\title{Facilitating the practical adoption of Software Defect Prediction through better techniques and empirical evaluation} % Title can't use formulae, symbols, superscripts, subscripts, greek letters, etc. all of which should be replaced with word substitutes
+\title{Facilitating the practical adoption of Software Defect Prediction through reliable techniques and a realistic empirical evaluation } %reliable, explainable, and realistic empirical evaluation.
+
+%Enhancing SDP models with 
 \author{Hareem Sahar}
 
-\degree{\PhD} % uncomment respective degree
+\degree{\PhD}
 
-\dept{Computing Science}  % Write Computing Science or Civil Engineering.
+\dept{Computing Science} 
 
 % If you have a specialization, uncomment the following line and enter it below.
 % It must correspond with what it says on Bear Tracks
@@ -176,9 +186,6 @@ mincitenames=1,maxcitenames=2%
 % Put the year that you submitted your thesis below
 \submissionyear{\number2025}
 
-%%%%%%%%%%%%%%%%%%%%%
-% Document Content  %
-%%%%%%%%%%%%%%%%%%%%%
 
 % This is a modular document.
 % The 'subfiles' package allows you to typeset the included
@@ -205,6 +212,7 @@ mincitenames=1,maxcitenames=2%
 \newcommand{\xmark}{\ding{55}}%
 \newcommand{\np}{\ding{100}}%
 
+
 \begin{document}
 
 \renewcommand{\onlyinsubfile}[1]{}
@@ -226,7 +234,7 @@ mincitenames=1,maxcitenames=2%
 % Below are the dedication page and the quote page. FGSR requirements are not
 % clear on if you can have one of each or just one or the other. They do say to
 % ask your supervisor if you should have them at all.
-%
+
 % The CS Department links to a comparison of pre- and post-Spring 2014 thesis
 % guidelines (https://www.ualberta.ca/computing-science/graduate-studies/current-students/dissertation-guidelines)
 % The comparison document lists an optional dedication page, but no quote page.
@@ -275,9 +283,11 @@ mincitenames=1,maxcitenames=2%
 \subfile{\main/tex/background.tex}
 \subfile{\main/tex/emse.tex}
 \subfile{\main/tex/irjit.tex}
+\subfile{\main/tex/treekernel.tex} 
+\subfile{\main/tex/discussion.tex} 
 \subfile{\main/tex/conclusion.tex}
 
-% Renaming the bibliography: See http://tex.stackexchange.com/questions/12597/renaming-the-bibliography-page-using-bibtex
+% Renaming thes bibliography: See http://tex.stackexchange.com/questions/12597/renaming-the-bibliography-page-using-bibtex
 \renewcommand\bibname{References}
 \clearpage\addcontentsline{toc}{chapter}{\bibname}
      %add the above line to get "References" in the table of contents.
@@ -296,9 +306,9 @@ mincitenames=1,maxcitenames=2%
 %
 % The standard `\appendix` macro will not put the word "appendix" before
 % table of contents entries.
-% See https://tex.stackexchange.com/questions/44858/adding-the-word-appendix-to-table-of-contents-in-latex
-\begin{appendices}
-\subfile{\main/tex/background.tex}
-\end{appendices}
+%% See https://tex.stackexchange.com/questions/44858/adding-the-word-appendix-to-table-of-contents-in-latex
+%\begin{appendices}
+%\subfile{\main/tex/background.tex}
+%\end{appendices}
 
 \end{document}

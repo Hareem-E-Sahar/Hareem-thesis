@@ -6,42 +6,214 @@
 
 \begin{document}
 
+%Chapter names do not have to be the same as paper names.\\
+%You can reorder the published papers to build a story.\\
+%Discussion section is needed.\\
+%Read "Automatically classifying source code using tree-based approaches".
+%~/UofA2025/Literature_Review/Trees_ASTs_and_Graphs/Automatically classifying source code using tree-based approaches
+
+
 \chapter{Introduction}
 
-Here is a test reference~\cite{Knuth68:art_of_programming}.
-These additional lines have been added just to demonstrate the spacing
-for the rest of the document. Spacing will differ between the typeset main
-document, and typeset individual documents, as the commands
-to change spacing for the body of the thesis are only in the main document.
+%\textcolor{blue}{TO DO:\\ 
+%	Italicize the first time you define a term.\\}
+\label{chp:intro}
+\textit{Software Defect Prediction (SDP)} is a prominent method in software engineering that aims to guide limited quality assurance resources towards testing components of the software that are most likely to contain defects. These may include modules, classes, or even software changes. \textit{Just-in-Time (JIT)} software defect prediction focuses on assessing the risk of software changes at the moment they are committed. This allows potential defects to be flagged while the code is still fresh in the developer's mind, making inspection and testing more efficient and cost-effective.
 
-\section{Cross-Referencing}\label{sec:crossRef}
+Despite its promise, SDP has seen limited adoption in real-world development workflows. One central reason for this disconnect is a lack of realism in design and evaluation of models. Realism in this context refers to the degree to which research practices and model implementations align with the realities of software development environments. %\textcolor{red}{I think this needs more elaboration or an example. The following paragraph elaborates the same idea but this paragraph seems to end abruptly.}
 
-Cross-references between child documents are possible using the
-\href{https://www.ctan.org/pkg/zref}{\texttt{zref}} package.
+While research in SDP has produced a range of sophisticated models, many are built and evaluated under conditions that deviate from those encountered in practice. For instance, models are often assessed using historical data and experimental setups that assume stable distributions over time, ignore chronological ordering, or rely on information that would not be available during actual deployment. In reality, defect data suffers from concept drift, and is time ordered which means you cannot train a model on information that is not available prior to the inference time. 
 
-\newpage
+Similarly, SDP models frequently rely on machine learning (ML) and deep learning (DL) methods that are non-transparent in their decision-making, and produce outputs that are not actionable or informative enough to aid in fixing the defect. Furthermore, such models are difficult to update, and costly to deploy at scale. This also makes their adoption less likely in practice. 
 
-Text on a new page, to test top margin size.
+This thesis is grounded in the belief that \textit{realism}---in both evaluation and execution---is key to making SDP practically valuable. I therefore structure this work around two critical dimensions:
 
-A sample equation \eqref{eq:test} follows:
+\textbf{\textit{Evaluation Realism:}} Are the evaluation methods reflective of how software evolves in the real world? Do the conclusions drawn from model performance hold up over time as new data emerges?
 
-\begin{equation}
-y = \frac{1}{x^2} + 4 \label{eq:test}
-\end{equation}
+\textbf{\textit{Execution Realism:}} Can defect prediction models be used effectively within real development workflows? Are they fast enough, interpretable, and incrementally updatable as software evolves?
 
-A sample table, Table \ref{tab:test}:
+Framing the problem along these two axes allows us to revisit foundational assumptions in SDP and investigate whether commonly reported performance results are reliable and whether the models themselves are practically deployable.
 
-\begin{table}[h]
-    \centering
-    \begin{tabulary}{0.75\textwidth}{r|L}
-    \textbf{Non-wrapping column} & \textbf{Wrapping column} \\ \hline
-    This is an ordinary column & This is a balanced-width column, where text will wrap
-    \end{tabulary}
-    \caption[A sample table] {A sample table created using the \href{https://ctan.org/pkg/tabulary}{\texttt{tabulary}} package}
-    \label{tab:test}
-\end{table}
+This thesis explores these questions through several interconnected studies which investigate the realism in the evaluation of software defect prediction studies, and then addresses the identified challenges of deployability by proposing a JIT approach, that has the characteristics needed in a  real-world model, enabling execution realism.  
 
-If there are many acronyms, such as \gls{asa}, and specialized technical terms, consider adding a glossary.
-Sample \gls{sampleGlossaryEntry}, and acroynm (\gls{asa}) descriptions are provided above.
+Together, these studies argue that time is a critical but frequently overlooked factor in both the evaluation and deployment of defect prediction models.
+Chronological order is inherent to software development, yet many existing approaches disregard this reality. By explicitly accounting for time and prioritizing realism, this thesis aims to bridge the gap between academic research and practical application in software defect prediction.
+
+To explore this objective, I examine three interrelated challenges that illustrate how current SDP models fall short of real-world applicability and how they might be improved. These challenges and the related studies are discussed next.
+
+\section{Problems Addressed}
+\label{sec:motivation}
+% Contextual information and its references from Pornprasit thesis.
+% Identify one big research question?
+% How can we improve the practical adoption of SDP approaches?
+% How can we make SDP useful or appealing for practitioners?
+
+In the first contribution of this thesis, I conduct a time-aware empirical evaluation that respects the chronology of software releases. I show that the conclusions of cross-project SDP models vary depending on the evaluation period, revealing that these models lack temporal stability. This study lays the groundwork for rethinking the design and evaluation of models intended for deployment. Based on the insights from this contribution, we adopt an evaluation methodology that reflects realism in the remainder of this work.
+
+To address a core issue in prior work we treat SDP as an online learning problem~\cite{cabral2019class}\cite{tabassum2020investigation}. In practice, the prediction data arrives as a stream of input examples with a specific timestamp attached to each. Yet existing studies often ignore the chronological nature of defect prediction data and train models using future data that would not have been available at prediction time. This practice is referred to as \textit{``time travel"} in my thesis. For example, cross-validation may train on data from 2010 while predicting defects for a version released in 2009. Compounding this, most studies overlook \textit{verification latency}—the delay between when a commit is made and when its defect status becomes known~\cite{cabral2019class}. Together, this results in inflated performance estimates and undermines the realism of prior evaluations.
+
+Furthermore, SDP models are typically trained offline and are not updated post-deployment, even when new data becomes available. Due to their reliance on ML and DL methods, retraining such models is computationally intensive and often impractical. %Together, these issues result in models that are brittle, outdated, and evaluated under unrealistic assumptions. 
+Another associated issue is the lack of transparency in ML and DL based models~\cite{rudin2019stop}. These approaches are black boxes in nature and do not provide interpretable reasons behind their predictions. Developers are unlikely to trust a model that cannot explain why a commit was flagged as risky~\cite{dam2018explainable}. 
+
+%Many JIT-SDP models rely on computationally expensive machine learning or deep learning techniques. These models are typically trained offline and are not updated after deployment. This poses a serious limitation because, in practice, new data becomes available continuously. Models that cannot incorporate this data are outdated quickly. Additionally, current models often ignore verification latency—the time lag between committing a change and determining whether it was defective.
+
+To overcome these problems it is necessary to develop fast, online, and explainable approaches. This thesis, as its second contribution, introduces IRJIT, a lightweight, information retrieval (IR) based JIT SDP model. Instead of training complex models, IRJIT indexes past commits using TF-IDF enabling instant updates. IRJIT is inherently explainable, as it predicts defectiveness by retrieving similar examples from the past. %IRJIT also ranks modified lines within a commit by risk, helping developers focus their inspection efforts more precisely. Furthermore, IRJIT ranks modified lines of code by riskiness which helps developers dedicate effort to specific parts of code.
+
+While the first two contributions of my thesis address the stability and practical deployability of SDP models, the third focuses on a more foundational question: How should source code be represented for effective similarity detection? While token-based retrieval that IRJIT relies on is fast, it overlooks the rich syntactic structure of source code. I hypothesize that utilizing the structural similarity between code examples can improve the accuracy of source code retrieval. To explore this hypothesis, I evaluate \textit{tree kernels}--algorithms that measure structural similarity by comparing parts of trees. This study investigates whether structural similarity can enhance similarity based retrieval task which is foundational to defect prediction.
+
+%Researches also disregard the verification latency i.e., they do not take into account the fact that training examples arrive with delay and developers do not know at commit time whether a change they commit will induce defects or not. As a result of these practices model performance estimates may be unrealistic.
+
+% Third Contribution: Our information retrieval approach relies on textual similarity whereas source code by nature is hierarchical. We anticipate that by leveraging syntactic information present in ASTs we can find similar source code snippets with better accuracy. For this purpose we use tree kernels.
+
+%Instead of learning complex patterns through training, IRJIT indexes past commits using TF-IDF and predicts the defectiveness of new commits by retrieving similar examples — enabling instant updates and explainable predictions. 
+%Instead of learning complex patterns through training, IRJIT indexes past commits using TF-IDF which is done instantly. Another advantage of IRJIT is that the model is inherently explainable as predictions are linked to their causes. 
+
+
+%These models are inherently explainable as predictions are linked to their causes. 
+
+
+%Following up on the aforementioned study and its findings, I aimed to address real-world deployment limitations of SDP models.
+
+%In this thesis, I challenged this assumption by hypothesizing that SDP models suffer from lack of stability. By investigating the temporal stability of conclusions in cross-project defect prediction (CPDP) approaches I showed that the conclusion of these models change as the underlying conditions change. 
+%This work laid the groundwork for rethinking the evaluation of SDP models designed for real-world adoption.
+
+%These models are rarely updated after training, ignore verification latency (the delay in labeling new data), and provide little transparency into why a commit is marked buggy.
+
+%...Updating JIT SDP models in an online manner. This means the new training examples are produced over time and used to update classifiers. However, due to the reliance of SDP models on ML and DL methods, such re-training is resource intensive and often infeasible. As a result, these models are rarely updated after initial training, and ignore verification latency (the delay in labeling new data). 
+%Such an evaluation should be avoided because it is unrealistic and can lead to wrong performance estimates.
+
+%\roundbox{
+%	\paragraph{Thesis statement.}
+%	Simpler, online, and interpretable software defect prediction models shall be developed. Such models will improve the real-world applicability of defect prediction and help improve software quality.}
+
+\section{Thesis Overview and Contributions}
+\textcolor{blue} {Theories, Hypotheses, and Contributions}
+This thesis proposes, implements, and empirically evaluates SDP approaches. After laying out the motivation in Chapter~\ref{chp:intro}, this thesis
+outlines the necessary background concepts in Chapter~\ref{chp:background}. The thesis then presents three distinct contributions in Chapter~\ref{chp:emse2020}, Chapter~\ref{chp:irjit}, and Chapter~\ref{chp:treekernels} with the relevant related work discussed in each chapter. Finally, in Chapter~\ref{chp:discussion}, I discuss how these contributions pave the way for adoption of software defect prediction in practice. \\
+
+\textbf{[Chapter~\ref{chp:emse2020}] On the Time-Based Conclusion Stability of Cross-Project Defect Prediction Models}\\
+In this chapter, I argue that researchers in empirical software engineering often generalize performance claims of defect prediction models beyond the datasets they evaluate--without accounting for how conclusions may change over time. To empirically investigate this issue, I conducted a case study of \textit{cross-project defect prediction (CPDP)} models trained and tested on different projects. The study employs a \textit{time-aware evaluation} framework, where models were trained exclusively on historical data and tested only on future snapshots.
+
+The central question addressed in this study is: Do defect prediction results remain stable over time, or do they fluctuate as projects evolve? The findings reveal that model performance--measured using F-Score, Area Under the Curve (AUC), and Matthews Correlation Coefficient (MCC)--varies significantly depending on the evaluation period. In many cases, the performance rankings of models shifted across time windows, indicating a lack of \textit{conclusion stability} i.e., conclusions drawn at one point in time may not hold in future releases.
+
+This contribution highlights the need for caution in generalizing model effectiveness and urges the community to adopt time-aware evaluation practices. Without establishing conclusion stability, researchers risk making claims that may be invalidated by future data. Therefore, defect prediction models should be evaluated in a temporally realistic manner to ensure their findings are robust and trustworthy.
+
+\textbf{[Chapter~\ref{chp:irjit}] IRJIT: A Simple, Online, Information Retrieval Approach for Just-In-Time Software Defect Prediction}\\
+
+In this chapter, I present a JIT-SDP approach called IRJIT which determines the defectiveness of new commits based on their similarity to historical commits. IRJIT leverages information retrieval techniques on source code, particularly the BM25 algorithm which is an extension of TF-IDF. Unlike traditional machine learning or deep learning models that require costly retraining and are difficult to update post-deployment, IRJIT is inherently \textit{online} and can incorporate new data effortlessly through incremental updates.
+
+In addition, IRJIT is also \textit{explainable} as predictions are supported by similar examples, enabling developers to understand the context behind each decision. The model also highlights source code lines by their riskiness, helping developers focus their inspection efforts. IRJIT was evaluated in a \textit{within-project defect prediction (WPDP)} setting i.e., the training and test data comes from the same project. In an evaluation on $10$ open-source datasets previously used in JIT-SDP studies~\cite{cabral2019class}\cite{cabral2023investigation}, IRJIT demonstrated up to $112$ times faster runtime compared to state-of-the-art ML and DL approaches (JITLine~\cite{pornprasit2021jitline} and JITFine~\cite{jitfine} respectively), while maintaining comparable predictive performance and offering interpretability.
+
+
+%prevents the introduction of defects into the software by identifying them at commit check-in
+%time. Current software defect prediction approaches rely on manually crafted
+%features such as change metrics and involve expensive to train machine learn-
+%ing or deep learning models. These models typically involve extensive training
+%processes that may require significant computational resources and time. These
+%characteristics can pose challenges when attempting to update the models in
+%real-time as new examples become available, potentially impacting their suit-
+%ability for fast online defect prediction. Furthermore, the reliance on a complex
+%underlying model makes these approaches often less explainable, which means
+%the developers cannot understand the reasons behind models’ predictions. An
+%approach that is not explainable might not be adopted in real-life development
+%environments because of developers’ lack of trust in its results. 
+
+
+\textbf{[Chapter~\ref{chp:treekernels}] An Empirical Evaluation of Tree Kernels for Source Code Retrieval}\\ 
+In this chapter, I present an extensive study conducted to evaluate the effectiveness of tree kernels for similarity-based source code retrieval — a task foundational to software defect prediction. Tree kernels measure structural similarity between trees such as ASTs by comparing sub-parts. We evaluated three popular tree kernels, namely the Subset Tree Kernel (SSTK), Partial Tree Kernel (PTK), and Subtree Kernel (STK). This study benchmarked their ability to retrieve semantically and syntactically similar code (Type-1, Type-2, Type-3 clones) and examined how their performance is influenced by AST size and complexity. Our results indicated that tree kernels have a high computational cost. To overcome this significant computational overhead of Tree Kernels, I proposed a hybrid retrieval strategy that combines a fast text-based retrieval with a slow tree kernel re-ranker. The hybrid approach reduced the runtime by up to 95\%, while preserving precision. This work contributes a representation-aware perspective to the broader goal of building better software defect prediction models -- where structural understanding of code could be critical for future, more robust, and explainable predictors.
+
+Chapter~\ref{chp:conclusion} summarizes the thesis by highlighting the benefits of the proposed approaches and provides suggestions to extend this work in the future, emphasizing the significance of creating techniques and tools that can be adopted in practice.
+
+%\subsubsection{Highlighting the instability and variability of defect prediction performance}
+%Proposing methodologies for improved evaluation of defect prediction approaches (time-aware, online). Advocating for simpler and more explainable JIT-SDP approaches.
+	
+%\subsection{Addressing the limitations of current JIT-SDP methods}
+%The thesis contributes to body of research by evaluating different software engineering technique that utilize source code information, and the development of more practical and insightful software analytics methods.
+	
+\subsection{Theories and Hypotheses}
+
+%A combination of both a rule-based approach and a statistical approach may be able to combine the best of both worlds.
+	
+%	- under the theory list some concrete falsifiable hypotheses to test these theories.
+%	
+%	You don't have to be right in the end. These are very terse examples:
+%
+%	Theory: Tree Kernels can help in defect prediction because they address structure.
+%	Falsifiable Hypothesis 1: F-measure of tree kernels should beat TF-IDF baseline.
+
+%The first theory is that IR can be used to find bugs.
+%IR approaches work as well as the ML and DL-based solutions.
+%Conclusions of SDP approaches do not hold well in SE. 
+
+Below, I propose several theories and their corresponding hypotheses, which are empirically investigated allowing me to confirm or refute these theories.
+
+
+\textbf{Conclusion Stability theory:}
+Conclusions of model performance are inconsistent across time, and mean   estimate may not reflect the true capability of a prediction model.
+
+% Time-agnostic evaluation can lead to incorrect and inconsistent performance estimates that do not reflect the true capability of a prediction model.\\
+
+% Time-agnostic evaluation is one that does not focus on the particular point in time at which the evaluation was conducted. Broad claims irrespective of time of evaluation. In fact it can be used in both ways. agnostic of the order and agnostic of the time of evaluation. time-aware means aware of the order and evaluation time too so not only avoid cross-validation but also couching claims with respect to time. A modelthat updates incrementally will naturally result from a time aware evaluation.
+
+
+
+
+\textit{Hypothesis (H-1):} Performance measures (F-score, G-score, MCC, AUC) of evaluated techniques vary by at least 5\% across different evaluations or when evaluated across different points in time.\\
+%should show a standard deviation of at least 5\%
+
+Through this theory we evaluate if model performance is inconsistent when evaluated at different points in time.
+
+
+\textbf{Time-travel theory:} Time travel evaluation  may improve performance in an unrealistic way.\\
+%overly optimistic prediction performance which does not reflect the true capability of the prediction model.
+
+%\textit{Time-agnostic evaluation of SDP models leads to significantly different performance conclusions than time-aware evaluation.}\\ % this part concerns cross validation
+
+\textit{Hypothesis (H-2):} Performance measures (F-score, G-score, AUC, MCC) of evaluated techniques is higher when evaluated with k-fold cross-validation.\\
+	
+\textbf{Simplicity theory:} Simpler defect prediction models can be quite competitive to complicated models.\\
+
+%\textit{Hypothesis H-3:} A lightweight retrieval-based model performs comparably to complex ML and DL model while being faster and easier to update.\\
+
+\textit{Hypothesis H-3:} Simple retrieval-based models achieve comparable predictive performance to advanced ML and DL based approaches.\\
+	
+\textbf{Structural Benefit theory:} Incorporating program structure into similarity measures improves the source code retrieval process.\\
+%Tree kernels which are structure-aware models may outperform lexical approaches in code similarity tasks.\\
+
+\textbf{Hypothesis H4-a:} Tree kernel similarity improves the code retrieval performance by 5\%.\\
+
+\textbf{Hypothesis H4-b:} Tree kernel similarity improves the SDP performance by 5\%.\\
+
+
+\section{Publication Details}
+During my Ph.D., I was the author of 6 peer-reviewed publications. Out of these, I was the first author of 3 publications which were published in JSS and EMSE journals in the year 2021, 2024, and 2025. I was also  the second author of a journal paper which was published in the year 2020 in EMSE. I also contributed to as second author to 2 short conference papers, both were published in MSR in the year 2019 and 2022 respectively. All the research in these published in these papers was conducted under the supervision of Dr. Abram Hindle.
+
+This thesis is primarily based on 3 journal papers, of which 2 are first author, and 1 is a second author contribution. I designed the methodology, conducted experiments, analyzed the results, and wrote the articles. In all the publications, Dr. Abram Hindle provided feedback on the methodology, empirical design choices, and the presentation of my work. Furthermore, in the first paper~\cite{bangash2020time}, I designed the methodology with assistance from Abdul Ali Bangash. He automated the execution of experiments to collect the performance measurements. I conducted the analysis of the raw results and drafted the writeup. Chapter~\ref{chp:emse2020} of this thesis has been published as:
+
+\begin{itemize}
+		\item{Bangash, Abdul Ali, et al. ``On the time-based conclusion stability of cross-project defect prediction models." Empirical Software Engineering 25.6 (2020): 5047-5083.}
+		
+\end{itemize}
+
+Chapter~\ref{chp:irjit} of this thesis has been published as:
+
+\begin{itemize}
+	\item{Sahar, Hareem, et al. ``IRJIT: A simple, online, information retrieval approach for just-in-time software defect prediction." Empirical Software Engineering 29.5 (2024): 131.}
+\end{itemize}
+
+Chapter~\ref{chp:treekernels} of this thesis is under review at EMSE:
+\begin{itemize}
+	\item{An Empirical Evaluation of Tree Kernels for Source Code Retrieval}
+\end{itemize}
+
+Following is a list of peer-reviewed publications (including papers I have co-authored) from my Ph.D. that were not included in this thesis.
+
+\begin{itemize}
+\item{Bangash, Abdul Ali, et al. ``What do developers know about machine learning: a study of ml discussions on stackoverflow." 2019 IEEE/ACM 16th International Conference on Mining Software Repositories (MSR). IEEE, 2019.}
+
+\item{Sahar, Hareem, Abram Hindle, and Cor-Paul Bezemer. ``How are issue reports discussed in Gitter chat rooms?." Journal of Systems and Software 172 (2021): 110852.}
+
+\item{Eng, Kalvin, and Hareem Sahar.``Replicating data pipelines with GrimoireLab." Proceedings of the 19th International Conference on Mining Software Repositories. 2022.}
+\end{itemize}
 
 \end{document}
