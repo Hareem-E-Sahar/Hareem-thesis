@@ -15,56 +15,132 @@
 %Read "Automatically classifying source code using tree-based approaches".
 %~/UofA2025/Literature_Review/Trees_ASTs_and_Graphs/Automatically classifying source code using tree-based approaches
 %Read all old notes and find out what discussions were done and include those.
+
+
+There is a notable lack of comprehensive studies examining the limitations and boundaries of existing methods. We contribute by doing such an assessment. 
 \section{How these studies are connected}
 How these contributions pave the way for the adoption of SDP in practice?
-What did we learn from the conclusion stability paper. We can't repeatedly re-train. Design simpler approaches. Incrementally update models. Explainable models.
-Incorporate structure.
 
-\section{SDP as a field has not kept up with the development pace of SE where LLMs have taken over}
-Do LLMs make SDP irrelevant
+Temporal instability in cross-project DP shows that static train/test splits are insufficient.
 
-The whole SDP is questionable and its something that needs to be re-evaluated. We need to establish strong datasets, better baselines, and evaluation criteria.
+Reported performance rankings are not stable over time, undermining generalizability claims.
+We can't evaluate on one time period and assume the model hold same performance across time. Models that win in one time slice may lose later. Reported gains don't persist.
+When underlying data changes, performance changes. Evaluations where model was evaluated on a particular point in time, and assuming conclusions generalize beyond those points leads to models that break in production. Time-aware instability explains why many SDP models fail to transfer to practice.
+Evaluation realism is not optional—it directly affects the validity of research conclusions. Avoid single-split, time-agnostic evaluations, rather do longitudinal or incremental or online evaluation.
+ 
 
-The need of code is increased. Clankers are producing code at a very fast rate so the need to code review has increased as well. Also, people care about the riskiness of commits. Due to these reasons the need of SDP models is high but SDP's effectiveness has not improved. With the amount of code we are producing that needs review, the slow models are very useful.
+Researchers need to evaluate across multiple points on the timeline. Couch claims of conclusions to context, and time. 
+
+
+In practice, repeatedly re-training a model is expensive and quickly becomes impractical. Design approaches that do not re-train from scratch are better. IRJIT updates incrementally and demonstrates that online, incremental evaluation is both feasible and informative. Focus on online approaches as JIT is inherently online problem. 
+
+More complex models are not necessarily more useful models.
+Design simpler approaches as those might be as good as the complicated models and might be more interpretable and  easier to explain.
+
+
+Traditionally the focus of SDP  is mostly on maximizing performance. Models optimized for benchmark performance often conflict with constraints faced in real development workflows.
+Practitioners need actionable, lightweight, and explainable models.
+
+IRJIT shows that simple IR-based methods can operate online with minimal assumptions.
+
+Tree kernels evaluate whether richer syntactic structure improves retrieval effectiveness.
+Incorporate structure when determining code similarity because pure lexical matches are not very meaningful. 
+Tree kernels, while expressive, raise concerns about computational cost vs. practical benefit in real deployment scenarios.
+Expensive models should follow up a cheap quick step.
+
+My thesis outlines a few critical issues in SDP research but there might be many more. I point out that the SDP research is questionable and should be re-evaluated.  
+Taken together, this thesis demonstrates that many accepted conclusions in software defect prediction are artifacts of unrealistic evaluation and execution assumptions. By introducing time-aware, incrementally updatable models, this work reframes how SDP models should be assessed, compared, and ultimately deployed.
+%%Industrial validation is limited, but realism is improved relative to prior work.
+
+\section{Do LLMs make SDP irrelevant?}
+%Is SDP still needed now that LLM's have taken over? 
+Bugs negatively impact a system particularly in safety and security-critical domains like autonomous driving (Chen et al., 2015) and healthcare (Cai et al., 2014), the consequences of these bugs can be more severe. 
+
+Probably yes because the need of reliable code is increased. Clankers are producing code at a very fast rate so the need to code review has increased as well. Even code written by LLMs can be bug prone and people care about the riskiness of commits. Due to these reasons the need of SDP models is high but SDP's effectiveness has not improved. With the amount of code we are producing that needs review, the slow models may not remain very useful. Models need to adapt fast. A model trained a year ago may not hold its performance as underlying assumptions could change. Especially with LLMs the old models become obsolete fast.
+
+While we may use LLMs to predict bug proneness of code but they may produce many false positives. Therefore, SDP in combination with LLMs might be a much reliable option.
+
+Therefore, reliable defect predictions models are still of importance. They should scale to the large amounts of code without being too slow.
+
+
+SDP as a field has not kept up with the development pace of SE where LLMs have taken over.
+The whole SDP research is questionable and it needs to be re-evaluated. We need to establish strong datasets, better baselines, and an agreed upon evaluation criteria.
 
 %LLMs have reasoning ability so we can produce reasonable estimates of code coming in.
+%See A reflection on change classification in the era of LLMs.
 
-\subsection{The problem of SDP datasets} 
-\textcolor{blue} Abram said that's not very relevant
+LLMs may also get affected by time-Based Output Drift. Furthermore, there is no assurance that the results will remain consistent over time.
 
-Only defects that get noticed make it to the issue tracker. 
-SZZ does not do great at labeling 
-The repair datasets might give a perspective.
-Daniel Alencar da Costa's survey has some great pointers on which studies offer explainability.
+AI can automatically generate tests for new code, even without history.
+Running these tests gives immediate signals: fail → likely buggy, pass → likely okay.
+This could augment SDP models, especially in early stages.
+
+LLM-generated tests are not perfect. They might miss edge cases, misunderstand the code, or give false positives/negatives. Traditional SDP can combine multiple sources of information (history, code metrics, developer patterns) to make more reliable predictions. In practice, the best approach is hybrid: use AI-generated test outputs as additional features for SDP, rather than replacing it entirely.
 
 \section{Comparison of embeddings and tree kernels}
 %advantages disadvantages.
-tree kernels do not need a lot of memory ? I wish
+
+tree kernels do not need a lot of memory ? I don't think so
 vs embeddings which do.
-However, embeddings are quite fast once loaded.
+However, embeddings are quite fast once loaded. And embeddings shift cost from online comparison to offline training. No adaptation to drift unless retrained.
+
+
+%I think I should not frame embeddings as inferior approximations to tree kernels
+
+%Deep models are trained offline and cannot adapt to evolving data distributions, label delays, or concept drift.
+
+%While embeddings reduce online similarity computation, they introduce substantial offline training cost and sensitivity to data evolution, making them problematic under realistic maintenance constraints.
 
 \section{Lessons from IRJIT}
-
+Most people use ML, we use IR.
 %Did we use the right metrics to evaluate IRJIT}
+
+
+%Why we leverage IR and how it benefits us in designing a realistic approach?
+%Light weight, up-to-date/online models, fast to update models, explain-ability, granular predictions.
+
+
+
+
 \subsection{Shortcomings of IRJIT}
 
+Lexical models are not aware of the contextual semantic information
 We did not evaluate its usefulness with real developers.
-It produces many FPs.
+High FPs for some projects.
 code frequencies do not care about code semantics. IRJIT overlooks token semantics e.g. it does not understand that for is similar to while.
 
+%In our research also, we have evaluated the explainability of the state-of-the-art models, but our approach had limitations, such as over-generalising. For example, we assumed transparent models were explainable, but does that mean they are useful to practitioners? Are all transparent models equal in terms of practitioners' ability to understand them? There is enormous potential for future research on the relationship between explainability and the usefulness to practitioners.
+%Do current explainable models provide enough information for end-users to act upon and trust the outputs? For example, we might consider measuring explanation satisfaction, which considers how well the user understands the explanation presented by the model [91]. Variable importance, for example, may not be sufficient for practitioners to understand the model. We could engineer better and more meaningful features for these models, including the potential causes, types, risks or impacts of a bug as variables in the machine-learning models.
 \subsection{How to extend the explainability of IRJIT}
-There is no way to measure explainability.
+There is no standard way or metrics to measure explainability.
 
 
 Providing line-level, interpretable defect predictions increases practical usefulness and improve developer trust.
 
 Fine-grained line-level prediction improves the model explainability without sacrificing performance.
 
+%There exists noted inconsistency among explanations provided by different techniques, highlighting the need for more reliable methods.
+%There is a gap in meeting end-users’ needs for explainability
+%Additionally, explainability includes post hoc explanations [116], offering supplemental insights to further clarify the model’s decisions. Consider two illustrative instances: in one, the model solely yields a binary label denoting the presence of vulnerabilities in a code snippet, while in the other, it provides a label accompanied by relevant code snippets showcasing similar vulnerabilities. This latter approach facilitates a deeper understanding of the model’s decision through additional explanation. 
+
 \section{Lessons from Tree Kernels}
 
-\subsection{Why did tree kernels not perform as expected}
-\subsection{Tree kernels should be evaluated in a supervised manner.}
-Tree kernels can be used for program repair.
+%They are deterministic, and do not require training unlike embeddings.
+
+\subsection{The problem of SDP datasets} 
+\textcolor{blue} Abram said that's not very relevant
+
+Only defects that get noticed make it to the issue tracker. 
+SZZ and its variants do not do a great job at labeling. Explainability datasets and metrics are not available.
+
+%See A Reflection on Change Classification in the Era of Large Language Model
+
+%The repair datasets might give a perspective.
+
+%Daniel Alencar da Costa's survey has some great pointers on which studies offer explainability.
+
+Why did tree kernels not perform as expected. They should have been evaluated in a supervised manner.
+Tree kernels can be used for program repair?
  %(see /home/hareem/ThinkpadP14/UofA2023/Tree_Kernel2024/NotesWinter2024.md)
 %Parse tree kernels have been successfully used in natural language processing (NLP). However, the parse tree kernel used in NLP does not perform well for program source code due to two issues. The first issue is the asymmetric influence of node changes. In previous tree kernels, changes near a root node have larger influence than changes near leaf nodes. When the tree depth is small, this effect is not serious. However, the parse trees of program sources are much larger than that of natural language sentences, and this unwanted influence greatly affects tree comparison. The second issue is the sequence of subtrees. Previous tree kernels count sequence of subtrees. Unlike natural language sentences, the sequence of two substructures (like the order of two methods in a Java class) has little information in program source codes. We identified these two issues, and propose a new parse tree kernel for program source code.
 
