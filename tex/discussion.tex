@@ -88,7 +88,9 @@ Taken together, these contributions suggest that several widely accepted conclus
 %Light weight, up-to-date/online models, fast to update models, explain-ability, granular predictions.
 
 
-\subsection{Design Choices and Limitations}
+\section{Design Choices and Limitations}
+In this section we reflect on different choices made throughout this thesis and how it impacted the outcomes.
+
 % how to extend explainability and how to evaluate it
 
 %Did we use the right metrics to evaluate IRJIT}
@@ -119,68 +121,96 @@ Taken together, these contributions suggest that several widely accepted conclus
 %In future, we might consider measuring explanation satisfaction, which considers how well the user understands the explanation presented by the model [91]. Variable importance, for example, may not be sufficient for practitioners to understand the model. We could engineer better and more meaningful features for these models, including the potential causes, types, risks or impacts of a bug as variables in the machine-learning models.
 %
 
+\subsection{Information Retrieval and Limitations}
 
-As an information retrieval based approach, IRJIT relies on lexical similarity and token frequency. While this choice enables designing lightweight, online models, it also means that the model is insensitive to deeper syntactic and semantic relationships in code. IRJIT builds a vocabulary incrementally as it sees new code. Anything it has not seen is out-of-vocabulary and therefore does not contribute to the predictions, which weakens its generalization beyond the exact tokens it has seen.
+As an information retrieval based approach, IRJIT relies on lexical similarity and token frequency. While this choice enables designing lightweight, online models, it also means that the model is insensitive to deeper syntactic and semantic relationships in code. IRJIT builds a vocabulary incrementally as it sees new code. Anything it has not seen is out-of-vocabulary and therefore does not contribute to the predictions, which weakens its generalization beyond the exact tokens it has seen. In this regard, n-grams~\cite{hindle2012,santos2018syntax} are potentially a better choice as they cater to out-of-vocabulary problem through techniques like smoothing. 
 
-For example, IRJIT does not capture the functional similarity between constructs such as \textsc{for} and \textsc{while}, nor does it reason about control-flow or behavioral equivalence. As a result, some semantically similar changes may be treated as unrelated, potentially limiting prediction quality in settings where semantic variation dominates over lexical similarity.
-
-Moreover, the token similarity based hints can be coincidental contributing to the high false positive rates as observed for some projects in Table~\ref{table:stats}. This behavior reflects a broader trade-off inherent in retrieval-based approaches: prioritizing recall and simplicity can come at the cost of precision in certain contexts. While this thesis reports these outcomes transparently, it does not propose mechanisms to systematically reduce false positives. %without sacrificing the model's online and incremental nature. 
+Moreover, the token similarity based hints can be coincidental contributing to the high false positive rates as observed for some projects in Table~\ref{table:stats}. This behavior reflects a broader trade-off inherent in retrieval-based approaches: prioritizing recall and simplicity can come at the cost of precision in certain contexts. While this thesis reports these outcomes transparently, it does not propose mechanisms to systematically reduce false positives.%without sacrificing the model's online and incremental nature. 
 Addressing this issues remains an open problem for future work.
 
-Another limitation of my thesis is the lack of its industrial validation. The hypothesis of this thesis were not evaluated in an actual software development setting nor were the techniques deployed in real-world development environments, nor were they evaluated through user studies involving actual developers. Consequently, claims about practical usefulness, or adoption are necessarily indirect. That said, the thesis improves realism relative to much prior SDP research by emphasizing time-aware evaluation, incremental model updates, and execution constraints that more closely reflect operational settings. These contributions outline a path toward practice-oriented SDP methods, but do not in themselves demonstrate industrial uptake.
+The lack of structural and semantic similarity modeling limits the effectiveness of IRJIT. To partially address this, I incorporated structural similarity signals derived from tree kernels into the IRJIT model.
+However, in its current form, IRJIT still does not capture functional similarity between constructs such as \textit{for} and \textit{while}, nor does it reason about control flow or behavioral equivalence. As a result, semantically similar changes may be treated as unrelated, which can limit prediction quality in SDP settings where semantic variation dominates over lexical similarity.
 
-As for the explainability of IRJIT, this thesis adopts reasonable assumptions but stops short of empirical evaluation. IRJIT is explainable in the sense that it provides explanations in the form of documents that support the predictions such as similar past commits, and source code lines ranked by riskiness. While this thesis does not empirically evaluate whether such explanations are useful for the developers or contain sufficient information for them to act upon. Arguably, this additional context plausibly enables a better understanding of model behavior compared to models that output only a binary label, or rely on post-hoc explanations which have been shown to produce inconsistent or even contradictory insights~\cite{roy2022don}. 
 
-That being said, it is imperative to validate such assumptions with the developers as transparency does not necessarily imply usefulness, and not all transparent models are equally understandable in practice. A major barrier in the evaluation of explainability of approaches is that it requires a lot of resources to conduct user studies. Moreover, there is no standard methodology, evaluation benchmarks, or dataset, and set of metrics for measuring explainability in defect prediction models.  that there are cu
-More broadly, the evaluation of explainability itself remains underdeveloped in SDP research. There are currently no standard approaches, benchmark datasets, or metrics for measuring explainability in defect prediction models.  While this thesis discusses explainability and its potential approaches, it does not resolve these foundational measurement challenges. 
+With respect to explainability, this thesis adopts reasonable assumptions but does not provide an empirical evaluation. IRJIT is explainable in the sense that it produces explanations in the form of documents that support the predictions such as similar past commits, and source code lines ranked by riskiness. However, this work does not empirically evaluate whether such explanations are useful for the developers or contain sufficient information for them to act upon. Arguably, this additional context may facilitate a better understanding of model behavior compared to models that output only a binary label, or rely on post-hoc explanations, which have been shown to produce inconsistent or even contradictory insights~\cite{roy2022don}.
 
-\subsection{Tree Kernels as an Alternative to Embeddings}
 
-Tree kernels and embeddings offer two different approaches to capturing code similarity, each with distinct trade-offs. Tree kernels work directly on ASTs, which are a natural representation of source code and are understandable by humans, unlike embeddings, which are hard to visualize.
-In the context of SDP, tree kernels offer the attractiveness of a simple non-neural alternative, i.e., they require no training or GPU resources. They compute similarity online without consuming significant memory beyond what is needed to store the trees themselves. Consistent with this thesis's focus on simple, lightweight methods applicable in real-world settings with limited offline training budgets, these characteristics motivated the evaluation of tree kernels.
-In addition to that, the deterministic nature of tree kernels ensures they will always produce the same similarity scores, given the same two ASTs.
+That being said, it is imperative to validate such assumptions with the developers as transparency does not necessarily imply usefulness, and not all transparent models are equally understandable in practice. A major barrier in the evaluation of explainability is the substantial resources required to conduct user studies. 
+Moreover, there are no standard methodologies, evaluation benchmarks, datasets, or metrics for measuring explainability in the area.
+While this thesis discusses explainability and its potential approaches, it does not resolve these foundational measurement challenges. 
+
+
+\subsection{Tree Kernels and Limitations}
+
+Tree kernels offer an alternative to embeddings for capturing code similarity, and each approach has distinct trade-offs. Tree kernels work directly on ASTs, which are a natural representation of source code and are understandable by humans, unlike embeddings, which are hard to visualize.
+In the context of SDP, tree kernels offer the attractiveness of a simple non-neural alternative, that requires no training or GPU resources, and computes similarity on-the-fly without defining explicit feature vectors. 
+Consistent with this thesis's focus on simple, lightweight methods applicable in real-world settings with limited offline training budgets, these characteristics motivated the evaluation of tree kernels.
+Additionally, the deterministic nature of tree kernels ensures that the same two ASTs will always yield identical similarity scores.
+
 
 Embeddings, on the other hand, are derived from deep learning models and need significant offline training to produce vector representations. Once the training is done, similarity comparisons are fast. Effectively, they shift the computational cost from inference to the training phase. This shift is problematic in evolving systems characterized by changes in data distributions, concept drift, and verification latency. Without retraining, their representations may become misaligned with the latest code changes, which can lead to degraded performance in realistic, continuously evolving development environments. The use of embeddings or similar models therefore does not align with the thesis's goal of realistic incremental model development.
 
 
-Neither alternative is strictly superior; rather, they reflect different priorities. Tree kernels offer a training-free, deterministic similarity that is immediately applicable to new data. In the context of this thesis, tree kernels provided an underexplored, practical alternative to embedding-based similarity. While they seemed to perfectly align with the broader focus of our thesis on simple, incrementally usable models that can be updated under realistic constraints, but their high computational complexity and slow nature in our experiments from ~\ref{chp:treekernels} showed that they were of limited practical value in SDP. In contrast, embeddings are not computed on the fly and almost all studies use pre-computed embeddings, which moves their training overhead offline to ensure fast runtime comparisons but tree kernels remain slow at the inference time.  This motivated the hybrid design in the third contribution where IRJIT's fast retrieval was combined with tree kernel re-ranking, to empirically assess the benefits of structural richness while maintaining practical efficiency.
+In my opinion, neither alternative is strictly superior; rather, they reflect different priorities. Tree kernels offer a training-free, deterministic similarity that is immediately applicable to new data. In this thesis, they served as an underexplored, practical alternative to embedding-based similarity. 
+While they align well with the broader focus of this thesis on simple, incrementally usable models, but their high computational cost and slow nature at inference time (Chapter~\ref{chp:treekernels}) limits their practical value for code search and retrieval. In contrast, embeddings are usually pre-computed, which moves their training and feature construction overhead offline to enable fast runtime comparisons. %This motivated the hybrid design in the third contribution where IRJIT's fast retrieval was combined with tree kernel re-ranking, to empirically assess the benefits of structural richness while maintaining practical efficiency.
 
+%Why did tree kernels not perform as expected. They should have been evaluated in a supervised manner.
+%Tree kernels can be used for program repair?
 
+\subsection{Lack of Industrial Evaluation }
 
-\subsection{Lessons from Tree Kernels}
+Another limitation of my thesis is the lack of its industrial validation. The hypothesis proposed in Chapter~\ref{chp:intro} and the relevant techniques were neither tested in actual software development settings nor assessed through user studies involving developers. Consequently, claims about practical usefulness, or adoption are necessarily indirect. 
+That said, the thesis improves realism relative to much prior SDP research by adopting time-aware evaluation, incremental model updates, and execution constraints that more closely reflect operational settings. While these contributions point toward practical SDP methods, they do not constitute evidence of industrial uptake.
 
+%Lessons from Tree Kernels
 
-\subsection{The problem of SDP datasets} 
-\textcolor{blue} Abram said that's not very relevant
-This can briefly be discussed in threats to validity section as it is not a limitation of my work but SDP in general.
-
-The only defects that get noticed are the ones that make it to the issue tracker and that's what SDP addresses.
-
-SZZ and its variants do not do a great job at labeling. Explainability datasets and metrics are not available.
-
-
-Why did tree kernels not perform as expected. They should have been evaluated in a supervised manner.
-Tree kernels can be used for program repair?
-
-We operate on the operational data.
-We are not totally aware of all the issues and bugs.
-We operate on the data in the wild.
-No instrumented product where we are aware of all issues.
-No solely benchmark tool.
-Make evaluation benchmark.
-
-%See A Reflection on Change Classification in the Era of Large Language Model
-
-%The repair datasets might give a perspective.
-
-%Daniel Alencar da Costa's survey has some great pointers on which studies offer explainability.
-
-%(see /home/hareem/ThinkpadP14/UofA2023/Tree_Kernel2024/NotesWinter2024.md)
  
+\section{Do Large Language Models make SDP irrelevant?}
+
+Research conducted prior to the appearance of Large Language Models (LLMs) naturally invites the question of whether such work remains relevant in light of the recent advances LLMs have brought to SE. This concern is understandable given the impressive capabilities demonstrated by LLMs; however, we cannot overlook the fundamental limitations of LLM-based approaches. In this section, I argue that rather than making SDP obsolete, LLMs introduce new challenges that further reinforce the need for reliable, time-aware SDP models.
+
+\subsection{Faster code production and increased need for SDP}
+One immediate consequence of LLM adoption is the change in the scale at which code is produced, which has direct implications for defect prediction.
+LLMs significantly increase the speed and volume of code production. 
+As a result, the burden on code review, testing, and quality assurance has increased. As more code is produced in less time, the feasibility of exhaustive testing and manual review has decreased further. In such settings, it becomes critical to identify the risky commits and prioritize their further scrutiny. SDP models are explicitly designed for this purpose, as they can estimate the riskiness of a commit and alert developers to further test it. Therefore, LLMs do not reduce the need for SDP; their use strengthens the case for scalable, SDP techniques.
+
+
+%\subsection{LLM code is not defect free} 
+%SDP does not target syntax errors, as most commits are already free of them due to compilation and continuous integration checks; instead, it estimates defect risk using historical data. Similarly, LLM-written code is often syntactically correct and compilable, but empirical evidence shows that it still contains other defects~\cite{tambon2025bugs}, necessitating the continued use of SDP.
+%
+%The most prevalent defects in practice are logical, semantic, and contextual, arising from misunderstandings of requirements, missing corner cases, and complex interactions within evolving codebases. LLM-based commits may be more risky in certain contexts as the increased human reliance on LLMs can let such subtle defects to slip through the development and review processes. These could have been caught otherwise through developer scrutiny. Empirical evidence also suggests that LLM-generated code is particularly prone to such issues, including misunderstandings of intent, incorrect assumptions, and flawed logic~\cite{dou2026wrong}.
+%
+%
+%Several studies further report concerns related to performance, maintainability, and security~\cite{tihanyi2025secure}. These findings indicate that LLMs shift the defect landscape rather than eliminating defects altogether. Consequently, the core problem that JIT-SDP addresses i.e., identifying risky changes before they cause failures, remains unresolved.
+
+SDP targets non-syntactic defects, since commits are already largely free of syntax errors due to compilation and continuous integration checks. Instead, SDP estimates the risk of logical, semantic, and contextual defects using historical data.
+
+LLM-written code follows the same pattern: it is often syntactically correct and compilable, yet empirical studies show that it still contains such defects~\cite{tambon2025bugs}. These defects arise from misunderstandings of intent, missing corner cases, and complex interactions in evolving codebases, and evidence suggests that LLM-generated code is particularly prone to these issues~\cite{dou2026wrong}.
+
+Moreover, LLM-based commits may be more risky because increased reliance on LLMs may reduce human scrutiny during development and review, allowing subtle defects to pass undetected. Recent research reports concerns around performance, maintainability, and security of LLM-written code~\cite{tihanyi2025secure}. Together, these findings indicate that LLMs shift the defect landscape rather than eliminate those. Consequently, the core problem addressed by JIT-SDP i.e., identifying risky changes at check-in time, remains relevant in the era of LLMs.
+
+\subsection{LLMs are non-deterministic}
+%LLMs offer a plausible way to assess the riskiness of software commits by reasoning about the semantic content of code changes, which are difficult to capture using historical repository data alone. In contrast, traditional software defect prediction models rely on long-term project signals such as developer history and prior defect trends. These models produce reproducible, auditable, and explainable results. At the same time, LLMs operate as probabilistic inference systems, and their outputs are inherently non-deterministic, varying with prompt formulation, model updates, and deployment conditions, which limits their suitability for consistent quality assurance. 
+%
+%While LLMs have reasoning ability, and they can produce post-hoc explanations in natural language, their internal working is opaque and difficult to validate empirically. Together, these differences suggest that LLM-based and traditional SDP approaches focus on different dimensions of commit riskiness, and theoretically neither approach fully subsumes the other. Therefore, combining them into a single approach may yield more accurate, robust, and actionable predictions and warrants empirical investigation.
+
+
+LLMs can be used for software defect prediction by leveraging pretrained semantic knowledge to assess code changes, capturing riskiness that may not be well represented in project specific historical data alone.
+In contrast, traditional SDP models estimate risk using long-term project signals such as developer activity, process metrics, and prior defect trends, yielding reproducible, auditable, and explainable predictions.
+
+However, LLMs function as probabilistic inference systems whose outputs may vary with prompt formulation, model updates, and deployment conditions, limiting their suitability for consistent and verifiable quality assurance. Although LLMs can generate natural-language explanations, their internal decision processes remain opaque and hard to validate empirically. These differences indicate that traditional vs LLM-based SDP approaches capture different dimensions of commit riskiness rather than the same signal. As a result, neither approach fully subsumes the other, and their combination may provide more robust and actionable defect risk estimates.
+
+\subsection{Effectiveness of SDP on LLM written code}
+
+Despite the widespread adoption of LLMs, there is a limited empirical evidence on how traditional SDP models perform in environments where some of the code is generated by LLMs.
+There are no established datasets comparing defect distributions before and after LLM adoption, nor systematic studies examining whether SDP models trained on human-written code remain valid for evaluating the riskiness of LLM-generated code. This gap suggests the need to re-evaluate the existing SDP research considering these additional perspectives, using better datasets, and appropriate evaluation methodologies. 
  
-\section{Do LLMs make SDP irrelevant?}
-%Is SDP still needed now that LLM's have taken over?
-%probabilistic inference not deterministic .
+This thesis contributes in this direction by examining how defects can be reliably predicted in evolving software systems. It challenges prevalent evaluation practices in SDP research and shows that conclusions drawn from static evaluation setups are often unstable over time. By demonstrating temporal instability in defect prediction results and exploring simple incremental  approaches, this work highlights the importance of temporally stable evaluations and opens new directions for future SDP research.
+
+\subsection{Do not include}
+Is SDP still needed now that LLM's have taken over?
+LLMs are probabilistic inference not deterministic.
+
 Have defects increased or decreased with the emergence of LLMs? Does defect distribution change after LLMs? Does the nature and type of defects change? There are papers that have evaluated if LLMs increase or decrease bugs. \\
  
 Did the defect distribution change?
@@ -232,10 +262,35 @@ LLMs Speeds up development.
 LLM generated code can be syntactically correct but semantically buggy. Developers still need to review carefully.
 
 %"Bugs in large language models generated code: an empirical study"
-10 distinctive bug patterns bug patterns were found in code generated by LLMs. These include Misinterpretations, Syntax Error, Silly Mistake, Prompt-biased code, Missing Corner Case, Wrong Input Type, Hallucinated Object, Wrong Attribute, IncompFacilitatinglete Generation, and Non-Prompted Consideration. 
+10 distinctive bug patterns bug patterns were found in code generated by LLMs. These include Misinterpretations, Syntax Error, Silly Mistake, Prompt-biased code, Missing Corner Case, Wrong Input Type, Hallucinated Object, Wrong Attribute, and Non-Prompted Consideration. 
 
 %"What is wrong with your code generated by large language models? An extensive study"
 This paper developed a taxonomy of bugs for LLM code that includes three categories (functional, syntax and runtime bugs) and ten sub-categories, and analyzed the root cause for common bug types. They found that functional bugs and misunderstanding and logic errors are the highest percentage of bugs produced by LLMs.
+
+\section{Threats to Validity}
+\subsection{Low Quality SDP Datasets} 
+This can briefly be discussed in threats to validity section as it is not a limitation of my work but SDP in general.
+
+The only defects that get noticed are the ones that make it to the issue tracker and that's what SDP addresses.
+
+SZZ and its variants do not do a great job at labeling. Explainability datasets and metrics are not available.
+
+We operate on the operational data.
+We are not totally aware of all the issues and bugs.
+We operate on the data in the wild.
+No instrumented product where we are aware of all issues.
+No solely benchmark tool.
+Make evaluation benchmark.
+
+%See A Reflection on Change Classification in the Era of Large Language Model
+
+%The repair datasets might give a perspective.
+
+%Daniel Alencar da Costa's survey has some great pointers on which studies offer explainability.
+
+%(see /home/hareem/ThinkpadP14/UofA2023/Tree_Kernel2024/NotesWinter2024.md)
+
+
 \end{document}
 
 %We only use code but other sources of information generated during software development may be just as important as the code.
