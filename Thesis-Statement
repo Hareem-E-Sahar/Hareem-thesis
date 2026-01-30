@@ -10,5 +10,11 @@ F1-score to measure how representative buckets are of the bugs that caused
 crashes.
 
 
+Static analysis can be used to optimize and measure the energy consumption of API usage in an app. This use of static analysis relieves developers from the effort of generating and executing test cases to obtain energy insights into their code.
 
 
+
+Researchers should not just focus on the performance of SDP models but their practical applicability in real-world should be given more importance. SDP models should be designed considering their practical 
+
+The main goal is to improve the productivity
+of software developers as they undertake maintenance tasks.

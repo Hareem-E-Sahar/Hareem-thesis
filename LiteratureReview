@@ -9,8 +9,9 @@ et al., 2016; Zhang et al., 2019), AST paths (Alon et al.,
 2019), memory heap graphs (Li et al., 2016), and ASTs
 enriched with data-flow information (Allamanis et al., 2018;
 Hellendoorn et al., 2020). These approaches require analyzing source code beyond simple tokenization. In this
-work, we derive a pre-trained contextual embedding of tokenized source code without explicitly modeling source-codespecific information, and show that the resulting embedding
-can be effectively fine-tuned for downstream tasks
+work, we derive a pre-trained contextual embedding of tokenized source code without explicitly modeling source-code
+specific information, and show that the resulting embedding
+can be effectively fine-tuned for downstream tasks.
 
 
 Build Embeddings literature review 
@@ -30,7 +31,7 @@ embeddings (TKs can be converted into embeddings but I don't think its straightf
 
 
 Bug Identification Methods in Current Research
-1. Static Analysis
+******************************** 1. Static Analysis ********************************
 Code Patterns & Anti-pattern Detection
 
 Identifying potential issues based on predefined rules.
@@ -43,7 +44,7 @@ Detecting constructs correlated with bugs.
 
 Often combined with ML methods for accuracy improvement.
 
-2. Machine Learning & Deep Learning Approaches
+******************************** 2. Machine Learning & Deep Learning Approaches ********************************
 Bug Prediction via Classification Models
 
 Predicting buggy components using historical data.
@@ -63,3 +64,7 @@ Tree kernels and graph embeddings to capture code structure and semantics.
 Helpful for detecting semantic or structural bugs, e.g., AST (Abstract Syntax Tree) representations.
 
 Dynamic analysis and GPT related approaches are not relevant to this thesis.
+
+we derive a pre-trained contextual embedding of tokenized source code without explicitly modeling source-code
+> specific information, and show that the resulting embedding
+> can be effectively fine-tuned for downstream tasks.

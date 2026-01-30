@@ -17,7 +17,7 @@
 
 Software defect prediction approaches have not seen widespread adoption in industry. Although researchers acknowledge this gap, there is a notable lack of studies that systematically examine the limitations and boundaries of existing methods that hinder their use in real-world settings. This thesis aims to bring some of these issues to the forefront so that they can be addressed by the research community. In particular, the thesis contributes an assessment of the lack of realism, especially with respect to time, in the evaluation and execution of SDP models.
 
-\section{How my thesis advances SDP}	
+\section{How this thesis advances SDP?}	
 %How these contributions pave the way for the adoption of SDP in practice?
 %
 %Temporal instability in cross-project DP shows that static train/test splits are insufficient.
@@ -165,17 +165,17 @@ That said, the thesis improves realism relative to much prior SDP research by ad
 %Lessons from Tree Kernels
 
  
-\section{Do Large Language Models make SDP irrelevant?}
+\section{Relevance of SDP in the Era of Large Language Models}
 
 Research conducted prior to the appearance of Large Language Models (LLMs) naturally invites the question of whether such work remains relevant in light of the recent advances LLMs have brought to SE. This concern is understandable given the impressive capabilities demonstrated by LLMs; however, we cannot overlook the fundamental limitations of LLM-based approaches. In this section, I argue that rather than making SDP obsolete, LLMs introduce new challenges that further reinforce the need for reliable, time-aware SDP models.
 
-\subsection{Faster code production and increased need for SDP}
+\subsection{Faster Code Production and Need for SDP}
 One immediate consequence of LLM adoption is the change in the scale at which code is produced, which has direct implications for defect prediction.
 LLMs significantly increase the speed and volume of code production. 
 As a result, the burden on code review, testing, and quality assurance has increased. As more code is produced in less time, the feasibility of exhaustive testing and manual review has decreased further. In such settings, it becomes critical to identify the risky commits and prioritize their further scrutiny. SDP models are explicitly designed for this purpose, as they can estimate the riskiness of a commit and alert developers to further test it. Therefore, LLMs do not reduce the need for SDP; their use strengthens the case for scalable, SDP techniques.
 
 
-%\subsection{LLM code is not defect free} 
+\subsection{Nature of Defects in LLM Code} 
 %SDP does not target syntax errors, as most commits are already free of them due to compilation and continuous integration checks; instead, it estimates defect risk using historical data. Similarly, LLM-written code is often syntactically correct and compilable, but empirical evidence shows that it still contains other defects~\cite{tambon2025bugs}, necessitating the continued use of SDP.
 %
 %The most prevalent defects in practice are logical, semantic, and contextual, arising from misunderstandings of requirements, missing corner cases, and complex interactions within evolving codebases. LLM-based commits may be more risky in certain contexts as the increased human reliance on LLMs can let such subtle defects to slip through the development and review processes. These could have been caught otherwise through developer scrutiny. Empirical evidence also suggests that LLM-generated code is particularly prone to such issues, including misunderstandings of intent, incorrect assumptions, and flawed logic~\cite{dou2026wrong}.
@@ -189,7 +189,7 @@ LLM-written code follows the same pattern: it is often syntactically correct and
 
 Moreover, LLM-based commits may be more risky because increased reliance on LLMs may reduce human scrutiny during development and review, allowing subtle defects to pass undetected. Recent research reports concerns around performance, maintainability, and security of LLM-written code~\cite{tihanyi2025secure}. Together, these findings indicate that LLMs shift the defect landscape rather than eliminate those. Consequently, the core problem addressed by JIT-SDP i.e., identifying risky changes at check-in time, remains relevant in the era of LLMs.
 
-\subsection{LLMs are non-deterministic}
+\subsection{LLMs are Non-deterministic}
 %LLMs offer a plausible way to assess the riskiness of software commits by reasoning about the semantic content of code changes, which are difficult to capture using historical repository data alone. In contrast, traditional software defect prediction models rely on long-term project signals such as developer history and prior defect trends. These models produce reproducible, auditable, and explainable results. At the same time, LLMs operate as probabilistic inference systems, and their outputs are inherently non-deterministic, varying with prompt formulation, model updates, and deployment conditions, which limits their suitability for consistent quality assurance. 
 %
 %While LLMs have reasoning ability, and they can produce post-hoc explanations in natural language, their internal working is opaque and difficult to validate empirically. Together, these differences suggest that LLM-based and traditional SDP approaches focus on different dimensions of commit riskiness, and theoretically neither approach fully subsumes the other. Therefore, combining them into a single approach may yield more accurate, robust, and actionable predictions and warrants empirical investigation.
@@ -200,87 +200,87 @@ In contrast, traditional SDP models estimate risk using long-term project signal
 
 However, LLMs function as probabilistic inference systems whose outputs may vary with prompt formulation, model updates, and deployment conditions, limiting their suitability for consistent and verifiable quality assurance. Although LLMs can generate natural-language explanations, their internal decision processes remain opaque and hard to validate empirically. These differences indicate that traditional vs LLM-based SDP approaches capture different dimensions of commit riskiness rather than the same signal. As a result, neither approach fully subsumes the other, and their combination may provide more robust and actionable defect risk estimates.
 
-\subsection{Effectiveness of SDP on LLM written code}
+\subsection{Effectiveness of SDP on LLM-written Code}
 
 Despite the widespread adoption of LLMs, there is a limited empirical evidence on how traditional SDP models perform in environments where some of the code is generated by LLMs.
 There are no established datasets comparing defect distributions before and after LLM adoption, nor systematic studies examining whether SDP models trained on human-written code remain valid for evaluating the riskiness of LLM-generated code. This gap suggests the need to re-evaluate the existing SDP research considering these additional perspectives, using better datasets, and appropriate evaluation methodologies. 
  
 This thesis contributes in this direction by examining how defects can be reliably predicted in evolving software systems. It challenges prevalent evaluation practices in SDP research and shows that conclusions drawn from static evaluation setups are often unstable over time. By demonstrating temporal instability in defect prediction results and exploring simple incremental  approaches, this work highlights the importance of temporally stable evaluations and opens new directions for future SDP research.
 
-\subsection{Do not include}
-Is SDP still needed now that LLM's have taken over?
-LLMs are probabilistic inference not deterministic.
-
-Have defects increased or decreased with the emergence of LLMs? Does defect distribution change after LLMs? Does the nature and type of defects change? There are papers that have evaluated if LLMs increase or decrease bugs. \\
- 
-Did the defect distribution change?
-Clarify if your data has syntax errors? Report the taxonomy of bugs in historical data and in LLM code?
-
-LLMs are great at producing syntax free code. However, commits are usually syntax free and they contain logical or semantic bugs that LLMs may overlook. Therefore, SDP models are still relevant today.
-Software projects often have unique, evolving errors specific to individual code repositories.  
- 
-Software is part of all domains, including healthcare and security-critical, where the consequences  of bugs are more severe. This has increased the need of reliable code even more. Clankers are producing code at a very fast rate so the need to code review has increased as well. Even code written by LLMs can be bug prone and people care about the riskiness of commits. Due to these reasons the need of SDP models is high but SDP's effectiveness has not improved. With the amount of code we are producing that needs review, the slow models may not remain very useful. Models need to adapt fast. A model trained a year ago may not hold its performance as underlying assumptions could change. Especially with LLMs the old models become obsolete fast.
- 
-While we may use LLMs to predict bug proneness of code but they may produce many false positives. Therefore, SDP in combination with LLMs might be a much reliable option.
- 
-Therefore, reliable defect predictions models are still of importance. They should scale to the large amounts of code without being too slow.
- 
- 
-SDP as a field has not kept up with the development pace of SE where LLMs have taken over.
-The whole SDP research is questionable and it needs to be re-evaluated. We need to establish strong datasets, better baselines, and an agreed upon evaluation criteria.
- 
-%LLMs have reasoning ability so we can produce reasonable estimates of code coming in.
-%See A reflection on change classification in the era of LLMs.
- 
-LLMs may also get affected by time-Based Output Drift. Furthermore, there is no assurance that the results will remain consistent over time.
- 
-AI can automatically generate tests for new code, even without history.
-Running these tests gives immediate signals: fail → likely buggy, pass → likely okay.
-This could augment SDP models, especially in early stages.
- 
-LLM-generated tests are not perfect. They might miss edge cases, misunderstand the code, or give false positives/negatives. Traditional SDP can combine multiple sources of information (history, code metrics, developer patterns) to make more reliable predictions. In practice, the best approach is hybrid: use AI-generated test outputs as additional features for SDP, rather than replacing it entirely.
-
-Unlike LLMs, our approach does not rely on training a model with hundreds of billion parameters or generalizing across datasets. It directly analyses the raw data from repositories (code and its structure), making it inherently reproducible and free from probabilistic biases. LLMs are not deterministic.
-
-Their resource requirements are significantly higher, both in terms of model size, training time and computational power. 
-There is differences in the cost of repairing buggy Copilot-generated code compared to human-generated code.
-
-A study found that although Copilot improves productivity, it often produces code with insecure patterns. (An Empirical Cybersecurity Evaluation of GitHub Copilot’s Code Contributions)
-
-Several studies point out that LLMs negatively impact software development from a security perspective.
-Our study reveals that at least 62.07\% of the LLM generated programs have security vulnerabilities. 
-%"How secure is AI-generated code: a large-scale comparison of large language models"
-
-Kla found four types of errors in ChatGPT-generated code: compilation and runtime errors, wrong output (linked to assertion errors), code style and maintainability, and performance and efficiency. ("Refining chatgpt-generated code: characterizing and mitigating code quality issues")
-
-There are no specific studies comparing types or distribution of bugs before and after the adoption of LLMs.
-
-No studies on assessing the effectiveness of traditional SDP models (that are trained solely on human-written code) on the software systems where part of the code is written by AI.
-
-
-LLMs Speeds up development.
-LLM generated code can be syntactically correct but semantically buggy. Developers still need to review carefully.
-
-%"Bugs in large language models generated code: an empirical study"
-10 distinctive bug patterns bug patterns were found in code generated by LLMs. These include Misinterpretations, Syntax Error, Silly Mistake, Prompt-biased code, Missing Corner Case, Wrong Input Type, Hallucinated Object, Wrong Attribute, and Non-Prompted Consideration. 
-
-%"What is wrong with your code generated by large language models? An extensive study"
-This paper developed a taxonomy of bugs for LLM code that includes three categories (functional, syntax and runtime bugs) and ten sub-categories, and analyzed the root cause for common bug types. They found that functional bugs and misunderstanding and logic errors are the highest percentage of bugs produced by LLMs.
-
-\section{Threats to Validity}
-\subsection{Low Quality SDP Datasets} 
-This can briefly be discussed in threats to validity section as it is not a limitation of my work but SDP in general.
-
-The only defects that get noticed are the ones that make it to the issue tracker and that's what SDP addresses.
-
-SZZ and its variants do not do a great job at labeling. Explainability datasets and metrics are not available.
-
-We operate on the operational data.
-We are not totally aware of all the issues and bugs.
-We operate on the data in the wild.
-No instrumented product where we are aware of all issues.
-No solely benchmark tool.
-Make evaluation benchmark.
+%\subsection{Do not include}
+%Is SDP still needed now that LLM's have taken over?
+%LLMs are probabilistic inference not deterministic.
+%
+%Have defects increased or decreased with the emergence of LLMs? Does defect distribution change after LLMs? Does the nature and type of defects change? There are papers that have evaluated if LLMs increase or decrease bugs. \\
+% 
+%Did the defect distribution change?
+%Clarify if your data has syntax errors? Report the taxonomy of bugs in historical data and in LLM code?
+%
+%LLMs are great at producing syntax free code. However, commits are usually syntax free and they contain logical or semantic bugs that LLMs may overlook. Therefore, SDP models are still relevant today.
+%Software projects often have unique, evolving errors specific to individual code repositories.  
+% 
+%Software is part of all domains, including healthcare and security-critical, where the consequences  of bugs are more severe. This has increased the need of reliable code even more. Clankers are producing code at a very fast rate so the need to code review has increased as well. Even code written by LLMs can be bug prone and people care about the riskiness of commits. Due to these reasons the need of SDP models is high but SDP's effectiveness has not improved. With the amount of code we are producing that needs review, the slow models may not remain very useful. Models need to adapt fast. A model trained a year ago may not hold its performance as underlying assumptions could change. Especially with LLMs the old models become obsolete fast.
+% 
+%While we may use LLMs to predict bug proneness of code but they may produce many false positives. Therefore, SDP in combination with LLMs might be a much reliable option.
+% 
+%Therefore, reliable defect predictions models are still of importance. They should scale to the large amounts of code without being too slow.
+% 
+% 
+%SDP as a field has not kept up with the development pace of SE where LLMs have taken over.
+%The whole SDP research is questionable and it needs to be re-evaluated. We need to establish strong datasets, better baselines, and an agreed upon evaluation criteria.
+% 
+%%LLMs have reasoning ability so we can produce reasonable estimates of code coming in.
+%%See A reflection on change classification in the era of LLMs.
+% 
+%LLMs may also get affected by time-Based Output Drift. Furthermore, there is no assurance that the results will remain consistent over time.
+% 
+%AI can automatically generate tests for new code, even without history.
+%Running these tests gives immediate signals: fail → likely buggy, pass → likely okay.
+%This could augment SDP models, especially in early stages.
+% 
+%LLM-generated tests are not perfect. They might miss edge cases, misunderstand the code, or give false positives/negatives. Traditional SDP can combine multiple sources of information (history, code metrics, developer patterns) to make more reliable predictions. In practice, the best approach is hybrid: use AI-generated test outputs as additional features for SDP, rather than replacing it entirely.
+%
+%Unlike LLMs, our approach does not rely on training a model with hundreds of billion parameters or generalizing across datasets. It directly analyses the raw data from repositories (code and its structure), making it inherently reproducible and free from probabilistic biases. LLMs are not deterministic.
+%
+%Their resource requirements are significantly higher, both in terms of model size, training time and computational power. 
+%There is differences in the cost of repairing buggy Copilot-generated code compared to human-generated code.
+%
+%A study found that although Copilot improves productivity, it often produces code with insecure patterns. (An Empirical Cybersecurity Evaluation of GitHub Copilot’s Code Contributions)
+%
+%Several studies point out that LLMs negatively impact software development from a security perspective.
+%Our study reveals that at least 62.07\% of the LLM generated programs have security vulnerabilities. 
+%%"How secure is AI-generated code: a large-scale comparison of large language models"
+%
+%Kla found four types of errors in ChatGPT-generated code: compilation and runtime errors, wrong output (linked to assertion errors), code style and maintainability, and performance and efficiency. ("Refining chatgpt-generated code: characterizing and mitigating code quality issues")
+%
+%There are no specific studies comparing types or distribution of bugs before and after the adoption of LLMs.
+%
+%No studies on assessing the effectiveness of traditional SDP models (that are trained solely on human-written code) on the software systems where part of the code is written by AI.
+%
+%
+%LLMs Speeds up development.
+%LLM generated code can be syntactically correct but semantically buggy. Developers still need to review carefully.
+%
+%%"Bugs in large language models generated code: an empirical study"
+%10 distinctive bug patterns bug patterns were found in code generated by LLMs. These include Misinterpretations, Syntax Error, Silly Mistake, Prompt-biased code, Missing Corner Case, Wrong Input Type, Hallucinated Object, Wrong Attribute, and Non-Prompted Consideration. 
+%
+%%"What is wrong with your code generated by large language models? An extensive study"
+%This paper developed a taxonomy of bugs for LLM code that includes three categories (functional, syntax and runtime bugs) and ten sub-categories, and analyzed the root cause for common bug types. They found that functional bugs and misunderstanding and logic errors are the highest percentage of bugs produced by LLMs.
+%
+%\section{Threats to Validity}
+%\subsection{Low Quality SDP Datasets} 
+%This can briefly be discussed in threats to validity section as it is not a limitation of my work but SDP in general.
+%
+%The only defects that get noticed are the ones that make it to the issue tracker and that's what SDP addresses.
+%
+%SZZ and its variants do not do a great job at labeling. Explainability datasets and metrics are not available.
+%
+%We operate on the operational data.
+%We are not totally aware of all the issues and bugs.
+%We operate on the data in the wild.
+%No instrumented product where we are aware of all issues.
+%No solely benchmark tool.
+%Make evaluation benchmark.
 
 %See A Reflection on Change Classification in the Era of Large Language Model
 

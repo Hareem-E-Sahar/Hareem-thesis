@@ -18,7 +18,7 @@ Tree kernels can be used for program repair. %(see /home/hareem/ThinkpadP14/UofA
 
 %When processing ASTs structures, we usually face a problem of high-dimensional data. The size of an AST increases more than linearly when the program size is larger. In the experimental dataset, the largest AST contains 7027 nodes, while the program has only 343 lines of code including comments and blank lines. High-dimensional data not only lead to waste of time and memory but also aﬀect the performance of algorithms. Thus, dimension reduction is an essential task for the AST-based approach.
 
-
+%Is IR a better method in general for SDP? Also, present lessons learnt from TK and present.
 
 Referring back to the introduction (Section \ref{sec:motivation}), we see
 that cross-references between files are correctly handled when the files
@@ -31,5 +31,11 @@ For cross-references to work, when files are compiled separately,
 the referenced file must be compiled at least once before the
 referring file is compiled.
 \end{note}
+
+
+%This thesis is timely and relevant because it addresses a foundational problem that persists regardless of how code is written: how reliably can we predict defects in evolving software systems? By demonstrating that defect prediction conclusions are unstable over time, your work cautions against naive trust in static models—whether traditional ML or LLM-based.
+%
+%In an era where code is produced faster than ever and by increasingly heterogeneous agents (humans and AI), robust, time-aware, and reproducible defect prediction is not optional—it is essential. Rather than making SDP obsolete, LLMs amplify the very challenges that motivated SDP research in the first place.
+
 
 \end{document}
