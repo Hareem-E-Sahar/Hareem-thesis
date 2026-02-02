@@ -18,13 +18,13 @@
 %\textcolor{blue}{TO DO:\\ 
 %	Italicize the first time you define a term.\\}
 \label{chp:intro}
-\textit{Software Defect Prediction (SDP)} is a prominent method in software engineering that aims to guide limited quality assurance resources towards testing components of the software that are most likely to contain defects. These may include modules, classes, or even software changes. \textit{Just-in-Time (JIT)} software defect prediction focuses on assessing the risk of software changes at the moment they are committed. This allows potential defects to be flagged while the code is still fresh in the developer's mind, making inspection and testing more efficient and cost-effective.
+\textit{Software Defect Prediction (SDP)} is a prominent method in software engineering that aims to guide limited quality assurance resources towards testing components of the software that are most likely to contain defects. These may include modules, classes, or even software changes. \textit{Just-in-Time (JIT)} software defect prediction focuses on assessing the risk of software changes at the moment they are committed. This allows potential defects to be flagged while the code is still fresh in the developer's mind~\cite{EMSE6effortaware,huang2017supervised}, making inspection and testing more efficient and cost-effective.
 
-Despite its promise, SDP has seen limited adoption in real-world development workflows. One central reason for this disconnect is a lack of realism in design and evaluation of models. Realism in this context refers to the degree to which research practices and model implementations align with the realities of software development environments. %\textcolor{red}{I think this needs more elaboration or an example. The following paragraph elaborates the same idea but this paragraph seems to end abruptly.}
+Despite its promise, SDP has seen limited adoption~\cite{da2016framework,} in real-world development workflows. One central reason for this disconnect is a lack of realism in design and evaluation of models. \textit{Realism} in this context refers to the degree to which research practices and model implementations align with the realities of software development environments. %\textcolor{red}{I think this needs more elaboration or an example. The following paragraph elaborates the same idea but this paragraph seems to end abruptly.}
 
-While research in SDP has produced a range of sophisticated models, many are built and evaluated under conditions that deviate from those encountered in practice. For instance, models are often assessed using historical data and experimental setups that assume stable distributions over time, ignore chronological ordering, or rely on information that would not be available during actual deployment. In reality, defect data suffers from concept drift, and is time ordered which means you cannot train a model on information that is not available prior to the inference time. 
+While research in SDP has produced a range of sophisticated models, many are built and evaluated under conditions that deviate from those encountered in practice. For instance, models are often assessed using historical data and experimental setups that assume stable distributions over time, ignore chronological ordering, or rely on information that would not be available during actual deployment. In reality, defect data suffers from concept drift~\cite{wang2018systematic}, and is time ordered which means you cannot train a model on information that is not available prior to the inference time. 
 
-Similarly, SDP models frequently rely on machine learning (ML) and deep learning (DL) methods that are non-transparent in their decision-making, and produce outputs that are not actionable or informative enough to aid in fixing the defect. Furthermore, such models are difficult to update, and costly to deploy at scale. This also makes their adoption less likely in practice. 
+Similarly, SDP models frequently rely on machine learning (ML) and deep learning (DL) methods that are non-transparent~\cite{dam2018explainable,grattan2024need} in their decision-making, and produce outputs that are not actionable or informative enough to aid in fixing the defect. Furthermore, such models are difficult to update, and costly~\cite{shen2024efficient} to deploy at scale. This also makes their adoption less likely in practice~\cite{grattan2024need}. 
 
 This thesis is grounded in the belief that \textit{realism}---in both evaluation and execution---is key to making SDP practically valuable. I therefore structure this work around two critical dimensions:
 
@@ -50,7 +50,7 @@ To explore this objective, I examine three interrelated challenges that illustra
 
 In the first contribution of this thesis, I conduct a time-aware empirical evaluation that respects the chronology of software releases. I show that the conclusions of cross-project SDP models vary depending on the evaluation period, revealing that these models lack temporal stability. This study lays the groundwork for rethinking the design and evaluation of models intended for deployment. Based on the insights from this contribution, we adopt an evaluation methodology that reflects realism in the remainder of this work.
 
-To address a core issue in prior work we treat SDP as an online learning problem~\cite{cabral2019class}\cite{tabassum2020investigation}. In practice, the prediction data arrives as a stream of input examples with a specific timestamp attached to each. Yet existing studies often ignore the chronological nature of defect prediction data and train models using future data that would not have been available at prediction time. This practice is referred to as \textit{``time travel"} in my thesis. For example, cross-validation may train on data from 2010 while predicting defects for a version released in 2009. Compounding this, most studies overlook \textit{verification latency}—the delay between when a commit is made and when its defect status becomes known~\cite{cabral2019class}. Together, this results in inflated performance estimates and undermines the realism of prior evaluations.
+To address a core issue in prior work we treat SDP as an online  problem~\cite{cabral2019class}\cite{tabassum2020investigation}. In practice, the prediction data arrives as a stream of input examples with a specific timestamp attached to each. Yet existing studies often ignore the chronological nature of defect prediction data and train models using future data that would not have been available at prediction time. This practice is referred to as \textit{``time travel"} in my thesis. For example, cross-validation may train on data from 2010 while predicting defects for a version released in 2009. Compounding this, most studies overlook \textit{verification latency}—the delay between when a commit is made and when its defect status becomes known~\cite{cabral2019class}. Together, this results in inflated performance estimates and undermines the realism of prior evaluations.
 
 Furthermore, SDP models are typically trained offline and are not updated post-deployment, even when new data becomes available. Due to their reliance on ML and DL methods, retraining such models is computationally intensive and often impractical. %Together, these issues result in models that are brittle, outdated, and evaluated under unrealistic assumptions. 
 Another associated issue is the lack of transparency in ML and DL based models~\cite{rudin2019stop}. These approaches are black boxes in nature and do not provide interpretable reasons behind their predictions. Developers are unlikely to trust a model that cannot explain why a commit was flagged as risky~\cite{dam2018explainable}. 
@@ -92,9 +92,9 @@ This thesis proposes, implements, and empirically evaluates SDP approaches. Afte
 outlines the necessary background concepts in Chapter~\ref{chp:background}. The thesis then presents three distinct contributions in Chapter~\ref{chp:emse2020}, Chapter~\ref{chp:irjit}, and Chapter~\ref{chp:treekernels} with the relevant related work discussed in each chapter. Finally, in Chapter~\ref{chp:discussion}, I discuss how these contributions pave the way for adoption of software defect prediction in practice. \\
 
 \textbf{[Chapter~\ref{chp:emse2020}] On the Time-Based Conclusion Stability of Cross-Project Defect Prediction Models}\\
-In this chapter, I argue that researchers in empirical software engineering often generalize performance claims of defect prediction models beyond the datasets they evaluate--without accounting for how conclusions may change over time. To empirically investigate this issue, I conducted a case study of \textit{cross-project defect prediction (CPDP)} models trained and tested on different projects. The study employs a \textit{time-aware evaluation} framework, where models were trained exclusively on historical data and tested only on future snapshots.
+In this chapter, I argue that researchers in empirical software engineering often generalize performance claims of defect prediction models beyond the datasets they evaluate, without accounting for how conclusions may change over time. To empirically investigate this issue, I conducted a case study of \textit{cross-project defect prediction (CPDP)} models trained and tested on different projects. The study employs a \textit{time-aware evaluation} framework, where models were trained exclusively on historical data and tested only on future snapshots.
 
-The central question addressed in this study is: Do defect prediction results remain stable over time, or do they fluctuate as projects evolve? The findings reveal that model performance--measured using F-Score, Area Under the Curve (AUC), and Matthews Correlation Coefficient (MCC)--varies significantly depending on the evaluation period. In many cases, the performance rankings of models shifted across time windows, indicating a lack of \textit{conclusion stability} i.e., conclusions drawn at one point in time may not hold in future releases.
+The central question addressed in this study is: Do defect prediction results remain stable over time, or do they fluctuate as projects evolve? The findings reveal that model performance (measured using F-Score, Area Under the Curve (AUC), and Matthews Correlation Coefficient (MCC)) varies significantly depending on the evaluation period. In many cases, the performance rankings of models shifted across time windows, indicating a lack of \textit{conclusion stability} i.e., conclusions drawn at one point in time may not hold in future releases.
 
 This contribution highlights the need for caution in generalizing model effectiveness and urges the community to adopt time-aware evaluation practices. Without establishing conclusion stability, researchers risk making claims that may be invalidated by future data. Therefore, defect prediction models should be evaluated in a temporally realistic manner to ensure their findings are robust and trustworthy.
 
@@ -120,7 +120,7 @@ In addition, IRJIT is also \textit{explainable} as predictions are supported by 
 
 
 \textbf{[Chapter~\ref{chp:treekernels}] An Empirical Evaluation of Tree Kernels for Source Code Retrieval}\\ 
-In this chapter, I present an extensive study conducted to evaluate the effectiveness of tree kernels for similarity-based source code retrieval — a task foundational to software defect prediction. Tree kernels measure structural similarity between trees such as ASTs by comparing sub-parts. We evaluated three popular tree kernels, namely the Subset Tree Kernel (SSTK), Partial Tree Kernel (PTK), and Subtree Kernel (STK). This study benchmarked their ability to retrieve semantically and syntactically similar code (Type-1, Type-2, Type-3 clones) and examined how their performance is influenced by AST size and complexity. Our results indicated that tree kernels have a high computational cost. To overcome this significant computational overhead of Tree Kernels, I proposed a hybrid retrieval strategy that combines a fast text-based retrieval with a slow tree kernel re-ranker. The hybrid approach reduced the runtime by up to 95\%, while preserving precision. This work contributes a representation-aware perspective to the broader goal of building better software defect prediction models -- where structural understanding of code could be critical for future, more robust, and explainable predictors.
+In this chapter, I present an extensive study conducted to evaluate the effectiveness of tree kernels for similarity-based source code retrieval which is a task foundational to software defect prediction. Tree kernels measure structural similarity between trees such as ASTs by comparing sub-parts. We evaluated three popular tree kernels, namely the Subset Tree Kernel (SSTK), Partial Tree Kernel (PTK), and Subtree Kernel (STK). This study benchmarked their ability to retrieve semantically and syntactically similar code (Type-1, Type-2, Type-3 clones) and examined how their performance is influenced by AST size and complexity. Our results indicated that tree kernels have a high computational cost. To overcome this significant computational overhead of Tree Kernels, I proposed a hybrid retrieval strategy that combines a fast text-based retrieval with a slow tree kernel re-ranker. The hybrid approach reduced the runtime by up to 95\%, while preserving precision. This work contributes a representation-aware perspective to the broader goal of building better software defect prediction models -- where structural understanding of code could be critical for future, more robust, and explainable predictors.
 
 Chapter~\ref{chp:conclusion} summarizes the thesis by highlighting the benefits of the proposed approaches and provides suggestions to extend this work in the future, emphasizing the significance of creating techniques and tools that can be adopted in practice.
 
@@ -158,31 +158,30 @@ Model performance conclusions are inconsistent across time, and mean   estimate 
 
 
 
-\textit{Hypothesis (H-1):} Performance measures (F-score, G-score, MCC, AUC) of evaluated techniques vary by at least 5\% across different evaluations or when evaluated across different points in time.\\
+\textit{\textbf{Hypothesis (H-1):}} Performance measures (F-score, G-score, MCC, AUC) of evaluated techniques vary by at least 5\% across different evaluations or when evaluated across different points in time.
 %should show a standard deviation of at least 5\%
 
-Through this theory we evaluate if model performance is inconsistent when evaluated at different points in time.
+This hypothesis allows us to empirically evaluate whether model conclusions are consistent when evaluated at different points in time, thereby providing insights into the temporal stability of defect prediction models.\\
 
-
-\textbf{Time-travel theory:} Time travel evaluation  may improve performance in an unrealistic way.\\
+\textbf{Time-travel theory:} Time travel evaluation  may improve performance in an unrealistic way.
 %overly optimistic prediction performance which does not reflect the true capability of the prediction model.
 
 %\textit{Time-agnostic evaluation of SDP models leads to significantly different performance conclusions than time-aware evaluation.}\\ % this part concerns cross validation
 
-\textit{Hypothesis (H-2):} Performance measures (F-score, G-score, AUC, MCC) of evaluated techniques is higher when evaluated with k-fold cross-validation.\\
+\textit{\textbf{Hypothesis (H-2):}} Performance measures (F-score, G-score, AUC, MCC) of evaluated techniques is higher when evaluated with k-fold cross-validation.\\
 	
-\textbf{Simplicity theory:} Simpler defect prediction models can be quite competitive to complicated models.\\
+\textbf{Simplicity theory:} Simpler defect prediction models can be quite competitive to complicated models.
 
 %\textit{Hypothesis H-3:} A lightweight retrieval-based model performs comparably to complex ML and DL model while being faster and easier to update.\\
 
-\textit{Hypothesis H-3:} Simple retrieval-based models achieve comparable predictive performance to advanced ML and DL based approaches.\\
+\textit{\textbf{Hypothesis H-3:}} Simple retrieval-based models achieve comparable predictive performance to advanced ML and DL based approaches.\\
 	
-\textbf{Structural Benefit theory:} Incorporating program structure into similarity measures improves the source code retrieval process.\\
+\textbf{Structural Benefit theory:} Incorporating program structure into similarity measures improves the source code retrieval process.
 %Tree kernels which are structure-aware models may outperform lexical approaches in code similarity tasks.\\
 
-\textbf{Hypothesis H4-a:} Tree kernel similarity improves the code retrieval performance by 5\%.\\
+\textbf{\textbf{Hypothesis H4-a:}} Tree kernel similarity improves the code retrieval performance by 5\%.
 
-\textbf{Hypothesis H4-b:} Tree kernel similarity improves the SDP performance by 5\%.\\
+\textbf{\textbf{Hypothesis H4-b:}} Tree kernel similarity improves the SDP performance by 5\%.\\
 
 
 \section{Publication Details}
