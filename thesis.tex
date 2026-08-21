@@ -74,6 +74,7 @@
 \usepackage{xspace}
 \usepackage{tikzsymbols}
 \usepackage{algorithm}
+\usepackage{amssymb} 
 \usepackage{algpseudocode}
 % references
 % Colors
@@ -184,7 +185,7 @@ mincitenames=1,maxcitenames=2%
 %\field{Specialization Field}
 
 % Put the year that you submitted your thesis below
-\submissionyear{\number2025}
+\submissionyear{\number2026}
 
 
 % This is a modular document.
@@ -260,7 +261,7 @@ mincitenames=1,maxcitenames=2%
 %...            % You are responsible for formatting this page
 %\end{listofsymbols}
                
-% A glossary of terms is also optional
+% A glossary of terms is alsyouo optional
 \printnoidxglossaries
                
 % The rest of the document has to be at least one-half-spaced.
@@ -278,12 +279,12 @@ mincitenames=1,maxcitenames=2%
 %  hopefully more than two lines! Use standard Latex sectioning commands
 %  like \chapter etc. End with the bibliography
 % See FGSR requirements for any additional requirements on the body
-
+\subfile{\main/tex/feedback.tex}
 \subfile{\main/tex/introduction.tex}
 \subfile{\main/tex/background.tex}
 \subfile{\main/tex/emse.tex}
 \subfile{\main/tex/irjit.tex}
-\subfile{\main/tex/treekernel.tex} 
+\subfile{\main/tex/newtreekernel.tex} 
 \subfile{\main/tex/discussion.tex} 
 \subfile{\main/tex/conclusion.tex}
 
@@ -303,7 +304,7 @@ mincitenames=1,maxcitenames=2%
 
 
 % Appendices are optional.
-%
+
 % The standard `\appendix` macro will not put the word "appendix" before
 % table of contents entries.
 %% See https://tex.stackexchange.com/questions/44858/adding-the-word-appendix-to-table-of-contents-in-latex
