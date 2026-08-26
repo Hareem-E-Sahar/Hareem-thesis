@@ -210,32 +210,6 @@ The theoretical grounding of tree kernels and their ability to capture fine-grai
 
 
 
-\section{Information Retrieval} 
-\textcolor{red}{TO DO:}\\
-
-\textcolor{red}{? Move to Code as Natural Language. Explain the shift toward viewing code as natural language and using NLP techniques.}\\
-\textcolor{red}{ Introduce Neural Models.
- Present newer models like CodeBERT, CC2Vec, and neural IR methods.}\\
-\textcolor{red}{ Connect to Your Work
- End with how your work builds on this foundation (using TF-IDF for code similarity}\\
-
-Information Retrieval (IR) techniques are used to identify relevant documents within a large collection of unstructured documents based on their similarity with user-defined queries. \textcolor{red}{reevaluate this paragraph now that you have already discussed tfidf and bm25.} Classical IR models, such as the Vector Space Model like TF-IDF and probabilistic models like BM25, were originally designed for natural language documents, not specifically for software artifacts. Hindle et al.~\cite{hindle2012} later demonstrated that source code exhibits statistical regularities similar to natural language. This perspective laid the foundation for treating software artifacts and code entities as textual artifacts that can be compared and ranked using similarity-based methods.
-
-In that vein, IR has been applied to various SE tasks, such as code search, bug localization, and crash report de-duplication~\cite{campbell2016unreasonable}. 
-In bug localization, IR techniques are used to generate a ranked list of potentially defective files to inspect, given a bug report. For instance, Locus~\cite{wen2016locus} measures relevance between bug reports and software changes, and successfully locates bug-inducing changes within the top 5 results for 41.0\% of bugs. While effective, such models still require high inspection effort from developers. TF-IDF and cosine similarity was also used~\cite{hindle2019query} to detect duplicate bug reports in real time by querying issue tracking systems prior to submission, thus helping to reduce redundancy in bug databases.\textcolor{red}{feels like rehashing the previous section, move around.}
-
-In code search, developers typically write queries in natural language to find relevant code snippets. Since TF-IDF relies on matching shared vocabulary between the query and documents, it performs well when the same terms are used in both. A common challenge of this approach is the vocabulary mismatch problem: developers often describe code behavior using different terms than those found in the code itself. To address this, researchers have explored query expansion with synonyms. For example, Lu et al.~\cite{lu2015query} used synonyms from WordNet, a lexical database of English, to enrich queries and then matched them with source code identifiers. FaCOY~\cite{facoy} extended this concept by utilizing Q\&A platforms like Stack Overflow to generate alternate queries, aiding in the identification of semantic code clones.
-
-
-The limitations of these simple models led to a shift towards semantic or embedding-based models facilitated by deep learning. Semantic models capture the meaning of text or code and store them as dense vector representations. Notably, CodeBERT~\cite{feng2020codebert} and CC2Vec~\cite{hoang2020cc2vec} have shown strong performance in a range of IR tasks by going beyond surface-level keyword matching.\text{why arent they in the previous section.} Pushing semantic retrieval further, Gu et al.~\cite{gu2018deep} introduced CODEnn, which embeds both code snippets and their textual descriptions into the same vector space, enabling meaningful semantic comparisons. Similarly, Lancer~\cite{lancer} combined a library-sensitive language model with BERT to better capture code intent, further improving retrieval effectiveness.
-
-%Inspired by the successful application of IR techniques to various SE tasks, this thesis applies IR to defect prediction. By treating code changes as documents, we leverage IR-based document similarity to identify similar source code changes. This approach provides a simple, lightweight, and explainable mechanism for Just-in-Time software defect prediction (JIT-SDP).
-\textcolor{blue}{I'm not sure if this next paragraph (limitations of embeddings)is important \& correctly placed. }
-Despite their advantages, embedding based methods have several  limitations~\cite{hellendoorn2017deep}. Such methods do not explicitly model hierarchical structures, that are often essential for understanding source code changes. Additionally, embeddings are inherently opaque: the individual dimensions in an embedding vector lack clear, interpretable meaning~\cite{grattan2024need}. This lack of explainability poses challenges for tasks such as software defect prediction~\cite{ribeiro2016should} where developers require transparent, explainable insights into why a particular code segment is flagged as defective. Since embeddings are dense, non-interpretable vectors~\cite{allamanis2014learning}, they do not provide clear reasoning or traceable features behind prediction, making it difficult for developers to validate or trust the results.
-
-Additionally, embeddings do not explicitly capture hierarchy inherent~\cite{alon2019code2vec} in source code such as the relationships between code elements, functions, control flow, which are often crucial for accurately identifying defects. Together, these limitations make embeddings unsuitable for use cases where explainability and structural understanding are essential.
-
-\textcolor{red}{Therefore, in this thesis, instead of relying on the default go-to method, embeddings, we explore theoretically well-established and simpler alternatives, such as TF-IDF and tree kernels. With the help of these methods we built explainable software defect prediction models while benefiting from the hierarchical structure of source code.}
 
 \section{Software Defect Prediction}
 A software defect, also known as a bug, fault, or error, is a deviation from the expected software behavior. Defects cost the US economy an estimated \$2.41 trillion in losses\footnote{https://www.it-cisq.org/the-cost-of-poor-quality-software-in-the-us-a-2022-report/} in $2022$. To prevent these defects and improve software quality, organizations regularly conduct code testing and inspections. Such activities are costly and resource-intensive~\cite{thongtanunam2015investigating}, making it impractical to thoroughly examine every part of a large system. 
